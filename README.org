@@ -16,8 +16,11 @@ why some settings came to be. This will additionally be super useful
 when you want to configure Emacs on other systems, as each specific
 configuration is motivated and explained -- potentially with figures
 or (other, external) Elisp source code blocks.
+
 The main purpose of this configuration file is that it provides a
 self-sustainable way of configuring Emacs. 
+
 So, without further ado, let us begin our Emacs configuration journey!
+
 See file:config.org
 

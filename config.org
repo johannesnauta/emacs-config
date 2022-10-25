@@ -71,11 +71,36 @@ width, among others. You can define other global keybindings here as well, as
 long as these are not originating from a package that is handled by
 =use-package=. These should be handled by =use-package= itself when loaded.
 #+begin_src emacs-lisp :tangle yes
-  (setq-default indent-tabs-mode nil)
-  (setq-default tab-width 2)
-  (setq indent-line-function 'insert-tab)
+  (setq-default indent-tabs-mode nil)						;; Spaces instead of tabs
+  (setq-default tab-width 2)			              ;; Default tab width
+  (setq-default fill-column 80)                 ;; Default column width
+  (setq indent-line-function 'insert-tab)       ;; Indent current line(s) according to current major mode
+  ;; Font and font size
+  (set-face-attribute 'default nil :font "Roboto Mono Medium")
   (set-face-attribute 'default nil :height 115)
-  (global-set-key (kbd "M-o") #'other-window)
+#+end_src
+*** Global keybindings unrelated to =use-package=
+#+begin_src emacs-lisp :tangle yes
+(global-set-key (kbd "M-o") #'other-window)
+#+end_src
+
+** Changing where backups are stored
+Emacs, just like Vim, makes regular backups of file that are undergoing active
+editing. This feature is very nice as it might save you at some point when you
+make a mistake. However, the Emacs backup files quickly clutter your inventory
+and make you constantly include them in a =.gitignore=, as you do not want these
+to fill your repositories. Much better behavior is to actually store them in a
+separate directory from which you can easily retrieve them if you have to.
+If you wish, you can also tell Emacs how many versions you wish to keep, but I
+just keep with the defaults (2) for now.
+#+begin_src emacs-lisp :tangle yes
+  (setq backup-directory-alist '(("." . "~/.emacs.d/backup"))
+        backup-by-copying t    ; Don't delink hardlinks
+        version-control t      ; Use version numbers on backups
+        delete-old-versions t  ; Automatically delete excess backups
+        ;; kept-new-versions 5    ; how many of the newest versions to keep
+        ;; kept-old-versions 5    ; and how many of the old
+        )
 #+end_src
 
 * Adding a terminal to Emacs
@@ -91,6 +116,11 @@ it provides the most complete terminal experience. Do note that it is still in
     :ensure t)
 #+end_src
 Afterwards you might want to [[https://github.com/akermu/emacs-libvterm#shell-side-configuration][configure the shell]] as well.
+Additionally we choose a global key combination to open vterm, in this case
+=C-`=.
+#+begin_src emacs-lisp :tangle yes
+(global-set-key (kbd "C-`") `vterm)
+#+end_src
 
 * Visual configurations
 Of course, no editor is your own when it does not look like your own. The
@@ -103,6 +133,51 @@ theme that better suits your needs.
 #+end_src
 
 ** Change how [[https://github.com/akermu/emacs-libvterm][vterm]] is displayed when opened
+The vterm normally opens (I think?) in an already opened buffer. This is often
+unwanted as you want to use the terminal on the side while keeping your current
+active buffer open. My personal preference is to open the terminal on the bottom
+-- mainly because I am used to that from my VSCode days.
+#+begin_src emacs-lisp :tangle yes
+  (add-to-list 'display-buffer-alist
+               '("\*vterm\*"
+                 (display-buffer-in-side-window)
+                 (window-height . 0.275)         ;; Specify fraction of window height
+                 (side . bottom)
+                 (slot . 0)))
+#+end_src
+
+** Change the modeline
+The modeline in Emacs is the single-line below each buffer in a window. It can
+display important information on the opened file, such as the Git branch, the
+filename, and [[https://www.emacswiki.org/emacs/ModeLine][much more]]. While I have played around with some configurations, I
+find the default modeline quite respectable, and tweaking the modeline was quite
+difficult.
+So, current modifications is just to include the column number in the modeline.
+#+begin_src emacs-lisp :tangle yes
+  (setq column-number-mode t)
+#+end_src
+
+** Change the frame title
+The frame title is displayed on top of the Emacs frame and can be configured as
+well. I do not look at the top of the frame often, so we will just let it
+display the filename and the Emacs version for now
+#+begin_src emacs-lisp :tangle yes
+(setq frame-title-format '("" "[%b] - Emacs " emacs-version))
+#+end_src
+
+* Interactive completion
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package vertico
+    :ensure t
+    :init (vertico-mode))
+#+end_src
+And let Vertico persist the history over Emacs restarts, so we can, if we want,
+quickly re-open files that we opened in a previous session.
+#+begin_src emacs-lisp :tangle yes
+  (use-package savehist
+    :init (savehist-mode))
+#+end_src
 
 * Emacs YASnippets
 No modern editor is complete without inserting large, pre-formatted textblocks
@@ -121,4 +196,141 @@ file:snippets/ directory.
   (use-package yasnippet-snippets
     :after yasnippet
     :config (yasnippet-snippets-initialize))
+#+end_src
+
+* Mode-specific configurations
+
+** Org mode
+Org mode comes with a lot of possible configurations, so these are just a very
+small selection of what is actually possible.
+*** Default behaviors
+The default bullets of Org are quite ugly (just bullets basically), so we make
+them look a little bit better. The same goes for the collapsed headers, called
+the 'ellipsis'.
+#+begin_src emacs-lisp :tangle yes
+  (use-package org-bullets
+    :config
+    (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+
+  (setq org-ellipsis "⤵")
+#+end_src
+Next up is changing the look of source code blocks (like the elisp blocks in
+this Org file).
+#+begin_src emacs-lisp :tangle yes
+  (setq org-src-fontify-natively t)
+#+end_src
+And we change the default behavior of Org timestamps to actually note the time
+and date when logging TODO's.
+#+begin_src emacs-lisp :tangle yes
+  (setq org-log-done t)
+#+end_src
+*** Global org keys
+I currently do not use a lot or Org functionality, so I should update this
+section on global keys and what they do when I actually have some experience
+with them. 
+#+begin_src emacs-lisp :tangle yes
+  (global-set-key (kbd "C-c l") #'org-store-link)
+  (global-set-key (kbd "C-c a") #'org-agenda)
+  (global-set-key (kbd "C-c c") #'org-capture)
+
+  ;; What does the \C mean in this context? 
+  ;; (define-key global-map "\C-cl" 'org-store-link)
+  ;; (define-key global-map "\C-ca" 'org-agenda)
+#+end_src
+*** Org-roam configuration
+**** TODO Use Org-roam more often and write some supporting text on the configuration. 
+
+** LaTeX configuration
+LaTeX is super nice, but compiling LaTeX is not so nice. Therefore we want to
+automate as much as we can so we can actually focus on writing only. This of
+course includes heavy use of [[YASnippets]] (e.g. for =\align= environments), but
+also includes quick (re-)compiling of =.tex= files, building a bibliography,
+etc. Working with LaTeX and (external) PDF viewers could be a chapter on its
+own, but most of the keybindings provides below speak for themselves. The
+configuration is built on top of [[https://www.gnu.org/software/auctex/][AUCTeX]], which is an extensible package for
+writing an formatting TeX files in Emacs. 
+#+begin_src emacs-lisp :tangle yes
+  (use-package tex
+    :ensure auctex
+    :config
+    (setq TeX-auto-save t)
+    (setq TeX-parse-self t))
+#+end_src
+While there exist some pdf tools that can display the rendered PDF in an Emacs
+window and provide Emacs functionality (such as [[https://www.emacswiki.org/emacs/IncrementalSearch][isearch]]), the viewers convert
+the PDF to a PNG and thereby losing resolution. While you can fiddle with the
+dpi settings, I prefer to use a better PDF-viewer instead: [[https://wiki.gnome.org/Apps/Evince][Evince]].
+#+begin_src emacs-lisp :tangle yes
+  (setq TeX-view-program-list '(("Evince" "evince --page-index=%(outpage) %o")))
+  (setq TeX-view-program-selection '((output-pdf "Evince")))
+#+end_src
+Additionaly, when we save a TeX file we want to automatically re-run the
+compilation such that the PDF is updated, so we 'correlate' the TeX and the PDF.
+#+begin_src emacs-lisp :tangle yes
+  (add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
+#+end_src
+And update the PDF buffers after a successful LaTeX run.
+#+begin_src emacs-lisp :tangle yes
+  (add-hook 'TeX-after-compilation-finished-functions
+            #'TeX-revert-document-buffer)
+#+end_src
+Finally, we change the keybinding of the 'save-render-show' procedure when in
+LaTeX-mode.
+#+begin_src emacs-lisp :tangle yes
+  (eval-after-load 'tex-mode
+    '(define-key LaTeX-mode-map (kbd "C-c l")
+       (lambda ()
+         "Save the buffer and run `TeX-command-run-all`."
+         (interactive)
+         (save-buffer)
+         (TeX-command-run-all nil))))
+#+end_src
+
+** Markdown configuration
+While Org mode is nice and all, I find myself reverting to Markdown in many
+cases. Most often for a =README.md= that is included in a Git repository. But it
+is nice to know that Org does support conversion to Markdown!
+Currently, as Markdown is a super simple (and therefore useful!) text format,
+the only thing I find myself using non-default behaviors is my preference of
+displaying emojis -- so enable that here.
+#+begin_src emacs-lisp :tangle yes
+  (use-package emojify
+    :hook (markdown-mode . emojify-mode))
+#+end_src
+
+** Python configuration
+Currently I write most of my code in Python, so we need some code completion and
+things to make writing Python code less of a chore. Currently I use [[http://tkf.github.io/emacs-jedi/released/#][Jedi.el]] for
+Python auto-completion. Besides completion is also enables a small pop-up screen
+that shows information about a function or class, code location, and more.
+#+begin_src emacs-lisp :tangle yes
+  (use-package jedi
+    :hook (python-mode . jedi:setup)
+    (setq jedi:complete-on-dot t))
+#+end_src
+
+*** IPython Notebook
+As much of the current development of Python code occurs in IPython Notebooks,
+such as a Jupyter Notebook, we would like to have this functionality in Emacs as
+well.
+Please do note that Emacs is **not** an Electron app (which is good!), so that
+some IPython functionality is not supported by default. More specifically, all
+things that are related to Javascript are not easily supported. This should not
+discourage you from using Emacs however, as you can use the Jedi.el Python
+completion backend right here in your IPython Notebook! And I can assure you
+that that one is much better, and much more configurable, then Jupyter
+Notebook's default code completer.
+
+Currently, I use [[https://github.com/millejoh/emacs-ipython-notebook][Emacs Ipython Notebook (EIN)]] as it proved to be the most
+successful one. The basic workflow, in order to support =conda= virtual
+environments as the Python kernel, is to start a Jupyter Notebook from the
+terminal and hook Emacs to that running kernel on your localhost using
+=ein:login=. In this way we do not have to fiddle much with Python kernels,
+virtual environments, and more. In the future we might want to make EIN know
+about our virtual environments and spin up a IPython kernel itself.
+#+begin_src emacs-lisp :tangle yes
+  (use-package ein
+    :config
+    (setq ein:completion-backend 'ein:use-ac-jedi-backend))
+  (use-package ein-notebook)
 #+end_src
