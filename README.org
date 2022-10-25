@@ -1,0 +1,23 @@
+#+TITLE:		README
+#+SUBTITLE: Short overview of Emacs configuration using org-babel
+#+AUTHOR:   Johannes Nauta
+
+#+STARTUP: indent
+
+* Emacs configuration using `org-babel`
+When becoming more experienced with Emacs you will undoubtedly notice
+that your configuration file will grow with no apparent end. Within
+your =~/.emacs.d= directory this will result in a single =init.el=
+file with no apparant ordering. While the search functionality of
+Emacs, together with some carefully crafted comments, is most likely
+more than enough to have a functional =init.el=, it is much nicer to
+enable a literal program in the form of a =.org= file that explains
+why some settings came to be. This will additionally be super useful
+when you want to configure Emacs on other systems, as each specific
+configuration is motivated and explained -- potentially with figures
+or (other, external) Elisp source code blocks.
+The main purpose of this configuration file is that it provides a
+self-sustainable way of configuring Emacs. 
+So, without further ado, let us begin our Emacs configuration journey!
+See file:config.org
+

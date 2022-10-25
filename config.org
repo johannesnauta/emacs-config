@@ -1,0 +1,124 @@
+#+TITLE:		config
+#+SUBTITLE: Emacs configuration using org-babel
+#+AUTHOR:   Johannes Nauta
+#+STARTUP:  indent
+
+* Literate Emacs configuration
+Welcome to my literate Emacs configuration using =org-babel=.
+
+** How to use this literal program
++ Pull this file from my [[https://github.com/github-jnauta/emacs-config][Github repository]]
++ =org-babel= should already be installed when using a version of Emacs >=24 
++ Replace the contents of your =~/.emacs.d/init.el= with one line
+#+begin_src
+(org-babel-load-file "~/.emacs.d/config.org")
+#+end_src
++ Done
+
+Note that some of the libraries that are used might need to be installed. If
+that is the case, simply =M-x package-install= the particular package that
+raises an error.
+  
+* =use-package=: The package manager
+=use-package= is my current bread-and-butter for installing packages to use with
+Emacs. It not only allows you to install packages, but allows configuring the
+packages as well. This is often done lazily, so you get much more performance
+out of Emacs when you let =use-package= do all the configuration when possible.
+First we need to use the built-in package manager to actually download
+=use-package= when it is not available.
+#+begin_src emacs-lisp :tangle yes
+  ;; Use the built-in package manager and specify archive
+  (require 'package)
+  (add-to-list 'package-archives
+               '("melpa" . "http://melpa.org/packages/") t)
+  ;; Initialize built-in package management
+  (package-initialize)
+  ;; Install use-package if not available
+  (unless (package-installed-p 'use-package)
+    (package-refresh-contents)
+    (package-install 'use-package))
+#+end_src
+Then we can actually load =use-package=
+#+begin_src emacs-lisp :tangle yes
+  ;; Load use-package by requiring it, to ensure it has been loaded
+  (eval-when-compile
+    (require 'use-package))
+#+end_src
+
+* Changing Emacs default behaviors
+** Suppressing default behaviors
+There are some default behaviors which are just annoying, such as the startup
+splash screen or the sound on error or EOF. We can suppress some more things
+while we're at it.
+#+begin_src emacs-lisp :tangle yes
+  (setq inhibit-startup-message t)  ;; Suppress startup splash screen
+  (setq ring-bell-function 'ignore) ;; Suppress sound on error or EOF
+  (menu-bar-mode -1)                ;; Turn off menu bar
+  (tool-bar-mode -1)                ;; Turn off tool bar
+#+end_src
+
+** Enabling default behaviors
+In contrast, some behavior is not turned on by default, so we do that here
+#+begin_src emacs-lisp :tangle yes
+  (global-display-line-numbers-mode 1)	;; Display line numbers in every buffer
+  (defalias 'yes-or-no-p 'y-or-n-p)     ;; All confirmations to single letters
+  (delete-selection-mode 1)             ;; Replace highlighted/selected text
+#+end_src
+
+** Specifying other defaults
+Finally, there are some defaults that are sensible to set, such as the TAB
+width, among others. You can define other global keybindings here as well, as
+long as these are not originating from a package that is handled by
+=use-package=. These should be handled by =use-package= itself when loaded.
+#+begin_src emacs-lisp :tangle yes
+  (setq-default indent-tabs-mode nil)
+  (setq-default tab-width 2)
+  (setq indent-line-function 'insert-tab)
+  (set-face-attribute 'default nil :height 115)
+  (global-set-key (kbd "M-o") #'other-window)
+#+end_src
+
+* Adding a terminal to Emacs
+When programming I often find myself reaching for a terminal window to, for
+example, quickly install a package using =apt=, browsing through my current
+working directory (although I should probably do this using Emacs...), and many
+other things. As we do not want to leave the safety of our carefully crafted
+Emacs environment, we need a terminal window. I currently use [[https://github.com/akermu/emacs-libvterm][vterm]], as I found
+it provides the most complete terminal experience. Do note that it is still in
+α-stage, so please be aware of (fundamental) changes down the line!
+#+begin_src emacs-lisp :tangle yes
+  (use-package vterm
+    :ensure t)
+#+end_src
+Afterwards you might want to [[https://github.com/akermu/emacs-libvterm#shell-side-configuration][configure the shell]] as well.
+
+* Visual configurations
+Of course, no editor is your own when it does not look like your own. The
+specific theme is my personal preference, so please feel free to change it to a
+theme that better suits your needs.
+#+begin_src emacs-lisp :tangle yes
+  (use-package zenburn-theme
+    :ensure t
+    :config (load-theme 'zenburn t))
+#+end_src
+
+** Change how [[https://github.com/akermu/emacs-libvterm][vterm]] is displayed when opened
+
+* Emacs YASnippets
+No modern editor is complete without inserting large, pre-formatted textblocks
+into your files with the press of a button. What separates a fast programmer (or
+writer) from a slow one is basically the use of 'snippets'. For example, all
+elisp source code blocks in this Org file are inserted with the =elisp_<TAB>=
+button combination. I personally use [[https://github.com/joaotavora/yasnippet][YASnippet]] in combination with a popular
+repository that contains snippets for a lot of modes, [[https://github.com/AndreaCrotti/yasnippet-snippets][YASnippet-snippets]].
+Snippets themselves should also be included in this repository, see the
+file:snippets/ directory.
+#+begin_src emacs-lisp :tangle yes
+  (add-to-list 'load-path
+               "~/.emacs.d/plugins/yasnippet")
+  (use-package yasnippet
+    :config (yas-global-mode))
+  (use-package yasnippet-snippets
+    :after yasnippet
+    :config (yasnippet-snippets-initialize))
+#+end_src
