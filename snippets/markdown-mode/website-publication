@@ -1,0 +1,12 @@
+# -*- mode: snippet -*-
+# name: website-publication
+# key: <pub
+# --
+<div class="references"><p>
+  <a href="${1:doi/url}" class="publication">
+    ${2:authors}
+    "<em>${3:title}</em>". 
+    ${4:journal/publisher}
+    ${5:entry/page no. (year)}.
+  </a>
+</p></div>

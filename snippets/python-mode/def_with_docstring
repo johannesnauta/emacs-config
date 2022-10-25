@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: def_with_docstring
+# key: <defdoc
+# --
+def ${1:function}(${2:args}) -> ${3:None}:
+  \"\"\"$4
+  ${2:$(python-args-to-docstring-numpy)}
+  \"\"\"
+  $0
