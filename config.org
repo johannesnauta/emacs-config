@@ -10,7 +10,7 @@ Welcome to my literate Emacs configuration using =org-babel=.
 + Pull this file from my [[https://github.com/github-jnauta/emacs-config][Github repository]]
 + =org-babel= should already be installed when using a version of Emacs >=24 
 + Replace the contents of your =~/.emacs.d/init.el= with one line
-#+begin_src
+#+begin_src emacs-lisp
 (org-babel-load-file "~/.emacs.d/config.org")
 #+end_src
 + Done
@@ -55,6 +55,8 @@ while we're at it.
   (setq ring-bell-function 'ignore) ;; Suppress sound on error or EOF
   (menu-bar-mode -1)                ;; Turn off menu bar
   (tool-bar-mode -1)                ;; Turn off tool bar
+  (setq scroll-conservatively 100)  ;; Make scrolling better
+  (show-paren-mode 1)               ;; Highlight matching parentheses
 #+end_src
 
 ** Enabling default behaviors
@@ -101,6 +103,22 @@ just keep with the defaults (2) for now.
         ;; kept-new-versions 5    ; how many of the newest versions to keep
         ;; kept-old-versions 5    ; and how many of the old
         )
+#+end_src
+
+* Switching between windows
+When programming I often have more than one window open. When you split a window
+vertically using =C-x 3= the default behavior is to keep the focus (the
+cursor) in the previous window. This is annoying. Luckily, there has been a
+[[https://github.com/daedreth/UncleDavesEmacs/blob/master/config.org][programmer]] that was equally annoyed (but much more versed in emacs-lisp) and
+wrote some nice functions to deal with this. Note that I only include the
+vertical split as I basically never find myself splitting horizontally.
+#+begin_src emacs-lisp :tangle yes
+  (defun split-and-follow-vertically ()
+    (interactive)
+    (split-window-right)
+    (balance-windows)
+    (other-window 1))
+  (global-set-key (kbd "C-x 3") 'split-and-follow-vertically)
 #+end_src
 
 * Adding a terminal to Emacs
@@ -198,6 +216,20 @@ file:snippets/ directory.
     :config (yasnippet-snippets-initialize))
 #+end_src
 
+* Navigating buffers with ease
+Navigating the current buffer can sometimes be a hassle as you have to press the
+arrow keys or, in extreme cases, use the mouse (/shudder/). Sometimes you need
+to be at very specific points in a document, and luckily for me there exists a
+beautiful package that handles this: =avy=. While explaining it sounds complex,
+it boils down to =M-x avy-goto-char= (rebound to =M-s=) and pressing a specific
+letter or key. On each instance of the key a letter will appear and pressing
+that letter will bring you immediately to that destination. 
+#+begin_src emacs-lisp :tangle yes
+(use-package avy
+  :ensure t
+  :bind ("M-s" . avy-goto-char))
+#+end_src
+
 * Mode-specific configurations
 
 ** Org mode
@@ -213,6 +245,10 @@ the 'ellipsis'.
     (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 
   (setq org-ellipsis "⤵")
+#+end_src
+Support shift selecting blocks of text as well, as described [[https://orgmode.org/manual/Conflicts.html][here]].
+#+begin_src emacs-lisp :tangle yes
+  (setq org-support-shift-select t)
 #+end_src
 Next up is changing the look of source code blocks (like the elisp blocks in
 this Org file).
@@ -300,7 +336,17 @@ displaying emojis -- so enable that here.
 
 ** Python configuration
 Currently I write most of my code in Python, so we need some code completion and
-things to make writing Python code less of a chore. Currently I use [[http://tkf.github.io/emacs-jedi/released/#][Jedi.el]] for
+things to make writing Python code less of a chore. First, let us fix the tab width
+#+begin_src emacs-lisp :tangle yes
+(add-hook 'python-mode-hook
+      (lambda ()
+        (setq indent-tabs-mode nil)
+        (setq tab-width 4)
+        (setq python-indent-offset 4)))
+#+end_src
+
+
+Currently I use [[http://tkf.github.io/emacs-jedi/released/#][Jedi.el]] for
 Python auto-completion. Besides completion is also enables a small pop-up screen
 that shows information about a function or class, code location, and more.
 #+begin_src emacs-lisp :tangle yes

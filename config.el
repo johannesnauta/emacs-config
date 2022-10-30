@@ -17,6 +17,8 @@
 (setq ring-bell-function 'ignore) ;; Suppress sound on error or EOF
 (menu-bar-mode -1)                ;; Turn off menu bar
 (tool-bar-mode -1)                ;; Turn off tool bar
+(setq scroll-conservatively 100)  ;; Make scrolling better
+(show-paren-mode 1)               ;; Highlight matching parentheses
 
 (global-display-line-numbers-mode 1)	;; Display line numbers in every buffer
 (defalias 'yes-or-no-p 'y-or-n-p)     ;; All confirmations to single letters
@@ -39,6 +41,13 @@
       ;; kept-new-versions 5    ; how many of the newest versions to keep
       ;; kept-old-versions 5    ; and how many of the old
       )
+
+(defun split-and-follow-vertically ()
+  (interactive)
+  (split-window-right)
+  (balance-windows)
+  (other-window 1))
+(global-set-key (kbd "C-x 3") 'split-and-follow-vertically)
 
 (use-package vterm
   :ensure t)
@@ -75,11 +84,17 @@
   :after yasnippet
   :config (yasnippet-snippets-initialize))
 
+(use-package avy
+  :ensure t
+  :bind ("M-s" . avy-goto-char))
+
 (use-package org-bullets
   :config
   (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 
 (setq org-ellipsis "⤵")
+
+(setq org-support-shift-select t)
 
 (setq org-src-fontify-natively t)
 
@@ -117,6 +132,12 @@
 
 (use-package emojify
   :hook (markdown-mode . emojify-mode))
+
+(add-hook 'python-mode-hook
+      (lambda ()
+        (setq indent-tabs-mode nil)
+        (setq tab-width 4)
+        (setq python-indent-offset 4)))
 
 (use-package jedi
   :hook (python-mode . jedi:setup)
