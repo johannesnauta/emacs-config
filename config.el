@@ -76,12 +76,12 @@
 (use-package savehist
   :init (savehist-mode))
 
-(add-to-list 'load-path
-             "~/.emacs.d/plugins/yasnippet")
 (use-package yasnippet
+  :ensure t
   :config (yas-global-mode))
 (use-package yasnippet-snippets
   :after yasnippet
+  :ensure t
   :config (yasnippet-snippets-initialize))
 
 (use-package avy
@@ -89,6 +89,7 @@
   :bind ("M-s" . avy-goto-char))
 
 (use-package org-bullets
+      :ensure t
   :config
   (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 
@@ -144,6 +145,6 @@
   (setq jedi:complete-on-dot t))
 
 (use-package ein
+      :ensure t
   :config
   (setq ein:completion-backend 'ein:use-ac-jedi-backend))
-(use-package ein-notebook)
