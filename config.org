@@ -291,8 +291,12 @@ writing an formatting TeX files in Emacs.
     :ensure auctex
     :config
     (setq TeX-auto-save t)
-    (setq TeX-parse-self t))
+    (setq TeX-parse-self t)
+    (setq-default TeX-master nil))
 #+end_src
+As I often use a tree structured input for LaTeX files, e.g. as with =\input= 
+or =\include=, we should let AUCTeX always ask for the master file when opening
+a nex =.tex= file.
 While there exist some pdf tools that can display the rendered PDF in an Emacs
 window and provide Emacs functionality (such as [[https://www.emacswiki.org/emacs/IncrementalSearch][isearch]]), the viewers convert
 the PDF to a PNG and thereby losing resolution. While you can fiddle with the
@@ -313,16 +317,6 @@ And update the PDF buffers after a successful LaTeX run.
 #+end_src
 Finally, we change the keybinding of the 'save-render-show' procedure when in
 LaTeX-mode.
-#+begin_src emacs-lisp :tangle yes
-  (eval-after-load 'tex-mode
-    '(define-key LaTeX-mode-map (kbd "C-c l")
-       (lambda ()
-         "Save the buffer and run `TeX-command-run-all`."
-         (interactive)
-         (save-buffer)
-         (TeX-command-run-all nil))))
-#+end_src
-
 ** Markdown configuration
 While Org mode is nice and all, I find myself reverting to Markdown in many
 cases. Most often for a =README.md= that is included in a Git repository. But it

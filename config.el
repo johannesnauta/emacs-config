@@ -113,7 +113,8 @@
   :ensure auctex
   :config
   (setq TeX-auto-save t)
-  (setq TeX-parse-self t))
+  (setq TeX-parse-self t)
+  (setq-default TeX-master nil))
 
 (setq TeX-view-program-list '(("Evince" "evince --page-index=%(outpage) %o")))
 (setq TeX-view-program-selection '((output-pdf "Evince")))
@@ -122,14 +123,6 @@
 
 (add-hook 'TeX-after-compilation-finished-functions
           #'TeX-revert-document-buffer)
-
-(eval-after-load 'tex-mode
-  '(define-key LaTeX-mode-map (kbd "C-c l")
-     (lambda ()
-       "Save the buffer and run `TeX-command-run-all`."
-       (interactive)
-       (save-buffer)
-       (TeX-command-run-all nil))))
 
 (use-package emojify
   :hook (markdown-mode . emojify-mode))
