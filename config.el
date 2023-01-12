@@ -76,6 +76,30 @@
 (use-package savehist
   :init (savehist-mode))
 
+(use-package orderless
+  :ensure t
+  :custom
+  (completion-styles '(orderless basic))
+  (completion-category-overrides '((file (styles basic partial-completion)))))
+
+(use-package marginalia
+  :ensure t
+  :init
+  (marginalia-mode))
+
+(use-package embark
+  :ensure t
+  :bind
+  ("C-." . embark-act)
+  :init
+  :config
+
+  ;; Hide the mode line of the Embark live/completions buffers
+  (add-to-list 'display-buffer-alist
+               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                 nil
+                 (window-parameters (mode-line-format . none)))))
+
 (use-package yasnippet
   :ensure t
   :config (yas-global-mode))
@@ -89,7 +113,7 @@
   :bind ("M-s" . avy-goto-char))
 
 (use-package org-bullets
-      :ensure t
+  :ensure t
   :config
   (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 
@@ -101,6 +125,9 @@
 
 (setq org-log-done t)
 
+(add-hook 'org-mode-hook #'auto-fill-mode)
+(add-hook 'org-mode-hook #'visual-line-mode)
+
 (global-set-key (kbd "C-c l") #'org-store-link)
 (global-set-key (kbd "C-c a") #'org-agenda)
 (global-set-key (kbd "C-c c") #'org-capture)
@@ -108,6 +135,34 @@
 ;; What does the \C mean in this context? 
 ;; (define-key global-map "\C-cl" 'org-store-link)
 ;; (define-key global-map "\C-ca" 'org-agenda)
+
+(use-package citar
+  :custom
+  (org-cite-global-bibliography '("~/work/papers/better-bibtex/postdoc.bib"))
+  (org-cite-insert-processor 'citar)
+  (org-cite-follow-processor 'citar)
+  (org-cite-activate-processor 'citar)
+  (citar-bibliography org-cite-global-bibliography)
+  ;; optional: (or )rg-cite-insert is also bound to C-c C-x C-@
+  :bind
+  (:map org-mode-map :package org ("C-c i c" . #'org-cite-insert)))
+
+(use-package citar-embark
+  :after citar embar
+  :no-require
+  :config (citar-embark-mode))
+
+(setq org-capture-templates
+    '(("t" "Todo" entry (file+headline "~/work/tasks/org/todo.org" "Tasks")
+       "* TODO %?\n  %i\n  %a")))
+
+(use-package org-roam
+  :custom
+  (org-roam-directory "~/work/notes/org-roam/")
+  :bind (("C-c n l" . org-roam-buffer-toggle)
+         ("C-c n f" . org-roam-node-find)
+         ("C-C n i" . org-roam-node-insert))
+  :config (org-roam-setup))
 
 (use-package tex
   :ensure auctex
@@ -138,6 +193,6 @@
   (setq jedi:complete-on-dot t))
 
 (use-package ein
-      :ensure t
+  :ensure t
   :config
   (setq ein:completion-backend 'ein:use-ac-jedi-backend))

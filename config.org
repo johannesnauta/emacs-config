@@ -144,11 +144,36 @@ Additionally we choose a global key combination to open vterm, in this case
 Of course, no editor is your own when it does not look like your own. The
 specific theme is my personal preference, so please feel free to change it to a
 theme that better suits your needs.
+[[https://github.com/bbatsov/zenb
+urn-emacs][Zenburn]] for Emacs is a direct port of the Zenburn theme originally created for
+vim. I (and others) think it is one of the best low contrast color themes out
+there that is super easy on the eyes and has pastel colors!
 #+begin_src emacs-lisp :tangle yes
   (use-package zenburn-theme
     :ensure t
     :config (load-theme 'zenburn t))
 #+end_src
+However, as I *really* like pastel colors, the [[https://github.com/mvarela/Sunburn-Theme][Sunburn]] color theme scratches the
+right itch as it includes more shades of gray and purple -- but still very
+pastel! Sadly, it is not available on ELPA/MELPA, so we need to install and load
+in manually.
+NOTE: Although this theme has some *really* nice colors, it feels less polished
+and easy on the eyes that Zenburn. It would be very nice to, at some point in
+the future, combine the two to create the 'ultimate' /burn/-theme.
+#+begin_src emacs-lisp :tangle no
+  (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/sunburn-theme-20231101.1")
+  (load-theme 'sunburn)
+#+end_src
+Catppuccin also has a nice range of pastel colors in four different 'flavors'.
+#+begin_src emacs-lisp :tangle no
+  (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/catppuccin-theme-20231101.1")
+  (load-theme 'catppuccin t)
+  (setq catppuccin-flavor 'frappe)
+  (catppuccin-reload)
+#+end_src
+NOTE: Although this theme has great colors, there are some things that are not
+wel configured. Similar to the Sunburn theme above, it needs some more work to
+actually fit my preferred style, although it has some potential!
 
 ** Change how [[https://github.com/akermu/emacs-libvterm][vterm]] is displayed when opened
 The vterm normally opens (I think?) in an already opened buffer. This is often
@@ -184,7 +209,8 @@ display the filename and the Emacs version for now
 #+end_src
 
 * Interactive completion
-
+[[https://github.com/minad/vertico][Vertico]] provides us with a minimalistic vertical completion UI that is based on
+the default completion system. Simple, yet powerful.
 #+begin_src emacs-lisp :tangle yes
   (use-package vertico
     :ensure t
@@ -195,6 +221,55 @@ quickly re-open files that we opened in a previous session.
 #+begin_src emacs-lisp :tangle yes
   (use-package savehist
     :init (savehist-mode))
+#+end_src
+As with Vertico the order of the regexp matters, it is often convenient to
+invoke [[https://github.com/oantolin/orderless][Orderless]], which makes the completion style match multiple regexps in any
+order. For example, I can "M-x ins pac" and "M-x package-install" will likely be
+the top candidate.
+#+begin_src emacs-lisp :tangle yes
+  (use-package orderless
+    :ensure t
+    :custom
+    (completion-styles '(orderless basic))
+    (completion-category-overrides '((file (styles basic partial-completion)))))
+#+end_src
+
+** Annotations in the minibuffer
+In many cases, especially when using relatively obscure Emacs functionality, it
+becomes unclear what a specific command does. [[https://github.com/minad/marginalia][Marginalia]] adds annotation in the
+minibuffer that explains the function of the command. This makes it very useful
+when using =M-x= functions, especially when combined with the above initialize
+completion frameworks.
+#+begin_src emacs-lisp :tangle yes
+  (use-package marginalia
+    :ensure t
+    :init
+    (marginalia-mode))
+#+end_src
+
+* Mini-buffer actions
+When having the cursor at a specific point when using Emacs, you often need to
+think about what to do with a selected region before you can do this. However,
+it can be easier. [[https://github.com/oantolin/embark][Embark]] enables you to suggest what to do with a specific
+selection, before you even think what to do with it. Effectively, it acts like a
+'right-click' on a piece of text in any other software. Is the text a link?
+Embark will suggest you to open it in a browser. Is it a list? Embark might
+suggest you to order the list based on some constraints. The list goes on and
+on. Embark comes with hundreds of actions preconfigures and, of course, they can
+be tailored to your needs if needed.
+#+begin_src emacs-lisp :tangle yes
+  (use-package embark
+    :ensure t
+    :bind
+    ("C-." . embark-act)
+    :init
+    :config
+
+    ;; Hide the mode line of the Embark live/completions buffers
+    (add-to-list 'display-buffer-alist
+                 '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                   nil
+                   (window-parameters (mode-line-format . none)))))
 #+end_src
 
 * Emacs YASnippets
@@ -223,7 +298,7 @@ to be at very specific points in a document, and luckily for me there exists a
 beautiful package that handles this: =avy=. While explaining it sounds complex,
 it boils down to =M-x avy-goto-char= (rebound to =M-s=) and pressing a specific
 letter or key. On each instance of the key a letter will appear and pressing
-that letter will bring you immediately to that destination. 
+that letter will bring you immediately to that destination. Just try it!
 #+begin_src emacs-lisp :tangle yes
 (use-package avy
   :ensure t
@@ -256,11 +331,20 @@ this Org file).
 #+begin_src emacs-lisp :tangle yes
   (setq org-src-fontify-natively t)
 #+end_src
-And we change the default behavior of Org timestamps to actually note the time
+Change the default behavior of Org timestamps to actually note the time
 and date when logging TODO's.
 #+begin_src emacs-lisp :tangle yes
   (setq org-log-done t)
 #+end_src
+It is inconvenient to have to =M-x auto-fill-mode= every time you open an Org
+file. However, line wrapping (not only visually line wrapping, as when using
+=visual-line-mode-) is basically a must. Therefore, we add a hook that enables
+this every time we open an Org file.
+#+begin_src emacs-lisp :tangle yes
+  (add-hook 'org-mode-hook #'auto-fill-mode)
+  (add-hook 'org-mode-hook #'visual-line-mode)
+#+end_src
+
 *** Global org keys
 I currently do not use a lot or Org functionality, so I should update this
 section on global keys and what they do when I actually have some experience
@@ -274,8 +358,61 @@ with them.
   ;; (define-key global-map "\C-cl" 'org-store-link)
   ;; (define-key global-map "\C-ca" 'org-agenda)
 #+end_src
+*** Org-mode configuration
+**** Citation with citar
+As we would like to cite items from some =.bib= file (perhaps one that is
+handled by external library applications such as Zotero), we use [[https://github.com/emacs-citar/citar][Citar]].
+This takes care of the dirty work and simply allows us to insert
+citations as if we were writing LaTeX! We can also specify a (shared) global
+bibliography and add any other (local) bibliographies within the Org files
+themselves if we want.
+#+begin_src emacs-lisp :tangle yes
+  (use-package citar
+    :custom
+    (org-cite-global-bibliography '("~/work/papers/better-bibtex/postdoc.bib"))
+    (org-cite-insert-processor 'citar)
+    (org-cite-follow-processor 'citar)
+    (org-cite-activate-processor 'citar)
+    (citar-bibliography org-cite-global-bibliography)
+    ;; optional: (or )rg-cite-insert is also bound to C-c C-x C-@
+    :bind
+    (:map org-mode-map :package org ("C-c i c" . #'org-cite-insert)))
+#+end_src
+To ensure that Citar works well together with [[Mini-buffer actions][Embark]] we load the =citar-embark=
+package that adds contextual access in the minibuffer.
+#+begin_src emacs-lisp :tangle yes
+  (use-package citar-embark
+    :after citar embar
+    :no-require t
+    :config (citar-embark-mode))
+#+end_src
+
+
+**** Capture templates
+Within the Org-mode infrastructure, *Capture* allows you to quickly store a note
+with little to no interruption of the current work flow. We  can use templates
+for different types of capture items, such as TODOs. Here, we copy the example
+from the Org-mode documentation that describes a template to create general TODO
+entries and put these under the heading 'Tasks' in our main task =.org= file.
+#+begin_src emacs-lisp :tangle yes
+  (setq org-capture-templates
+      '(("t" "Todo" entry (file+headline "~/work/tasks/org/todo.org" "Tasks")
+         "* TODO %?\n  %i\n  %a")))
+#+end_src
+
 *** Org-roam configuration
-**** TODO Use Org-roam more often and write some supporting text on the configuration. 
+#+begin_src emacs-lisp :tangle yes
+  (use-package org-roam
+    :custom
+    (org-roam-directory "~/work/notes/org-roam/")
+    :bind (("C-c n l" . org-roam-buffer-toggle)
+           ("C-c n f" . org-roam-node-find)
+           ("C-C n i" . org-roam-node-insert))
+    :config (org-roam-setup))
+#+end_src
+
+
+**** TODO Use Org-roam more often, make a sensible configuration and write some supporting text on the configuration. 
 
 ** LaTeX configuration
 LaTeX is super nice, but compiling LaTeX is not so nice. Therefore we want to
