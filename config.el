@@ -167,10 +167,11 @@
   (setq lsp-keymap-prefix "C-c o")
   :config
   (define-key lsp-mode-map (kbd lsp-keymap-prefix) lsp-command-map)
-  ;; =lsp-enable-which-key-integration= gives us descriptions of what the keys
-  ;; do, which helps us figure out what they do when using =lsp-mode=.
   :hook (;; add modes
          (julia-mode . lsp-deferred)
+         (julia-ts-mode . lsp-deferred)
+         ;; =lsp-enable-which-key-integration= gives us descriptions of what the keys
+         ;; do, which helps us figure out what they do when using =lsp-mode=.
          (lsp-mode . lsp-enable-which-key-integration)))
 
 (use-package lsp-julia
@@ -179,7 +180,7 @@
   (setq lsp-julia-default-environment "~/.julia/environments/v1.8"))
 
 (use-package org-bullets
-      :ensure t
+  :ensure t
   :config
   (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 
@@ -257,18 +258,20 @@
   (setq jedi:complete-on-dot t))
 
 (use-package ein
-      :ensure t
+  :ensure t
   :config
   (setq ein:completion-backend 'ein:use-ac-jedi-backend))
 
-(use-package julia-mode
-  :ensure t
-  ;; Specify the hook that connects =lsp-mode=
-  :hook (julia-mode-hook . lsp-mode))
+(add-to-list 'load-path "~/.emacs.d/local-packages/julia-ts-mode/")
+(require 'julia-ts-mode)
+;; (use-package julia-ts-mode
+;;   :ensure nil
+;;   :load-path "~/.emacs.d/local-packages/julia-ts-mode/"
+;;   :hook (julia-ts-mode-hook . lsp-mode))
 
 (use-package julia-repl
   :ensure t
-  :hook (julia-mode . julia-repl-mode)
+  :hook (julia-ts-mode . julia-repl-mode)
 
   :config
   ;; Set the terminal backend

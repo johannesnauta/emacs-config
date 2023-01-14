@@ -410,6 +410,7 @@ flexible and easy to configure and works well with popular Emacs packages like
     (define-key lsp-mode-map (kbd lsp-keymap-prefix) lsp-command-map)
     :hook (;; add modes
            (julia-mode . lsp-deferred)
+           (julia-ts-mode . lsp-deferred)
            ;; =lsp-enable-which-key-integration= gives us descriptions of what the keys
            ;; do, which helps us figure out what they do when using =lsp-mode=.
            (lsp-mode . lsp-enable-which-key-integration)))
@@ -656,13 +657,19 @@ I want to start writing most of my code in [[https://julialang.org/][Julia]] as 
 scientific computing. While in general the support for Julia is not as
 widespread as Python's, there is significant movement leading to a bunch of
 tools (for Emacs). The most important one is [[https://github.com/JuliaEditorSupport/julia-emacs][Julia-mode]].
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp :tangle no
   (use-package julia-mode
     :ensure t
     ;; Specify the hook that connects =lsp-mode=
     :hook (julia-mode-hook . lsp-mode))
 #+end_src
 Note: =julia-mode= does not highlight syntax very well.
+#+begin_src emacs-lisp :tangle yes
+  (use-package julia-ts-mode
+    :ensure nil
+    :load-path "~/.emacs.d/local-packages/julia-ts-mode/"
+    :hook (julia-ts-mode-hook . lsp-mode))
+#+end_src
 
 The Julia REPL is quite a useful tool when writing and debugging, so we want to
 add support for a good REPL in Emacs. Sadly, [[https://github.com/tpapp/julia-repl][julia-repl]] is not not available
@@ -671,7 +678,7 @@ have to resort to manually downloading the relevant =elisp= files.
 #+begin_src emacs-lisp :tangle yes
   (use-package julia-repl
     :ensure t
-    :hook (julia-mode . julia-repl-mode)
+    :hook (julia-ts-mode . julia-repl-mode)
 
     :config
     ;; Set the terminal backend
