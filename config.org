@@ -13,7 +13,7 @@ Welcome to my literate Emacs configuration using =org-babel=.
 #+begin_src emacs-lisp
 (org-babel-load-file "~/.emacs.d/config.org")
 #+end_src
-+ Done
++ Enjoy Emacs
 
 Note that some of the libraries that are used might need to be installed. If
 that is the case, simply =M-x package-install= the particular package that
@@ -65,6 +65,10 @@ In contrast, some behavior is not turned on by default, so we do that here
   (global-display-line-numbers-mode 1)	;; Display line numbers in every buffer
   (defalias 'yes-or-no-p 'y-or-n-p)     ;; All confirmations to single letters
   (delete-selection-mode 1)             ;; Replace highlighted/selected text
+  ;; Build a list of recently opened files
+  (recentf-mode 1)
+  (setq recentf-max-menu-items 25)
+  (setq recentf-max-saved-items 25)
 #+end_src
 
 ** Specifying other defaults
@@ -141,6 +145,7 @@ Additionally we choose a global key combination to open vterm, in this case
 #+end_src
 
 * Visual configurations
+** Color theme
 Of course, no editor is your own when it does not look like your own. The
 specific theme is my personal preference, so please feel free to change it to a
 theme that better suits your needs.
@@ -174,6 +179,25 @@ Catppuccin also has a nice range of pastel colors in four different 'flavors'.
 NOTE: Although this theme has great colors, there are some things that are not
 wel configured. Similar to the Sunburn theme above, it needs some more work to
 actually fit my preferred style, although it has some potential!
+
+** Change the startup screen
+#+begin_src emacs-lisp :tangle yes
+  (use-package dashboard
+    :ensure t
+    :config
+    (dashboard-setup-startup-hook))
+  ;; Set the title
+  (setq dashboard-banner-logo-title "Welcome Johannes")
+  ;; Set the banner
+  (setq dashboard-startup-banner 'logo)
+  ;; Center content
+  (setq dashboard-center-content t)
+  ;; Customize widgets
+  (setq dashboard-items '((recents . 5)
+                          (bookmarks . 5)))
+  ;; Disable random footnote
+  (setq dashboard-set-footer nil)
+#+end_src
 
 ** Change how [[https://github.com/akermu/emacs-libvterm][vterm]] is displayed when opened
 The vterm normally opens (I think?) in an already opened buffer. This is often
@@ -344,6 +368,14 @@ this every time we open an Org file.
   (add-hook 'org-mode-hook #'auto-fill-mode)
   (add-hook 'org-mode-hook #'visual-line-mode)
 #+end_src
+Org links are by default openen in another window (i.e. it splits the current
+window in 2), which I think is undesired in many cases other than just quickly
+checking the file out. To change this default behavior, we need to change the
+value of =org-link-frame-setup=
+#+begin_src emacs-lisp :tangle yes
+  (add-to-list 'org-link-frame-setup '(file . find-file))
+#+end_src
+
 
 *** Global org keys
 I currently do not use a lot or Org functionality, so I should update this
@@ -353,10 +385,6 @@ with them.
   (global-set-key (kbd "C-c l") #'org-store-link)
   (global-set-key (kbd "C-c a") #'org-agenda)
   (global-set-key (kbd "C-c c") #'org-capture)
-
-  ;; What does the \C mean in this context? 
-  ;; (define-key global-map "\C-cl" 'org-store-link)
-  ;; (define-key global-map "\C-ca" 'org-agenda)
 #+end_src
 *** Org-mode configuration
 **** Citation with citar
@@ -387,7 +415,6 @@ package that adds contextual access in the minibuffer.
     :config (citar-embark-mode))
 #+end_src
 
-
 **** Capture templates
 Within the Org-mode infrastructure, *Capture* allows you to quickly store a note
 with little to no interruption of the current work flow. We  can use templates
@@ -410,8 +437,6 @@ entries and put these under the heading 'Tasks' in our main task =.org= file.
            ("C-C n i" . org-roam-node-insert))
     :config (org-roam-setup))
 #+end_src
-
-
 **** TODO Use Org-roam more often, make a sensible configuration and write some supporting text on the configuration. 
 
 ** LaTeX configuration
@@ -476,11 +501,10 @@ things to make writing Python code less of a chore. First, let us fix the tab wi
         (setq tab-width 4)
         (setq python-indent-offset 4)))
 #+end_src
-
-
-Currently I use [[http://tkf.github.io/emacs-jedi/released/#][Jedi.el]] for
-Python auto-completion. Besides completion is also enables a small pop-up screen
-that shows information about a function or class, code location, and more.
+*** Autocompletion
+Currently I use [[http://tkf.github.io/emacs-jedi/released/#][Jedi.el]] for Python auto-completion. Besides completion is also
+enables a small pop-up screen that shows information about a function or class,
+code location, and more.
 #+begin_src emacs-lisp :tangle yes
   (use-package jedi
     :hook (python-mode . jedi:setup)
@@ -512,3 +536,45 @@ about our virtual environments and spin up a IPython kernel itself.
     :config
     (setq ein:completion-backend 'ein:use-ac-jedi-backend))
 #+end_src
+
+** Julia configuration
+I want to start writing most of my code in [[https://julialang.org/][Julia]] as it is very appealing for
+scientific computing. While in general the support for Julia is not as
+widespread as Python's, there is significant movement leading to a bunch of
+tools (for Emacs). The most important one is [[https://github.com/JuliaEditorSupport/julia-emacs][Julia-mode]].
+#+begin_src emacs-lisp :tangle yes
+  (use-package julia-mode
+    :ensure t)
+#+end_src
+The Julia REPL is quite a useful tool when writing and debugging, so we want to
+add support for a good REPL in Emacs. Sadly, [[https://github.com/tpapp/julia-repl][julia-repl]] is not not available
+through MELPA, so we cannot use =use-package= to automate the installation but
+have to resort to manually downloading the relevant =elisp= files.
+#+begin_src emacs-lisp :tangle yes
+  (use-package julia-repl
+    :ensure t
+    :hook (julia-mode . julia-repl-mode)
+
+    :config
+    ;; Set the terminal backend
+    (julia-repl-set-terminal-backend 'vterm)
+
+    ;; Keybindings for quickly sending code to the REPL
+    (define-key julia-repl-mode-map (kbd "<M-RET>") 'my/julia-repl-send-cell))
+#+end_src
+
+#+begin_src emacs-lisp :tangle yes
+  (defun my/julia-repl-send-cell() 
+    ;; "Send the current julia cell (delimited by ###) to the julia shell"
+    (interactive)
+    (save-excursion
+      (setq cell-begin (if (re-search-backward "^###" nil t) (point) (point-min))))
+    (save-excursion
+      (setq cell-end (if (re-search-forward "^###" nil t) (point) (point-max))))
+    (set-mark cell-begin)
+    (goto-char cell-end)
+    (julia-repl-send-region-or-line)
+    (next-line))
+#+end_src
+
+

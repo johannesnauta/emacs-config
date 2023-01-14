@@ -23,6 +23,10 @@
 (global-display-line-numbers-mode 1)	;; Display line numbers in every buffer
 (defalias 'yes-or-no-p 'y-or-n-p)     ;; All confirmations to single letters
 (delete-selection-mode 1)             ;; Replace highlighted/selected text
+;; Build a list of recently opened files
+(recentf-mode 1)
+(setq recentf-max-menu-items 25)
+(setq recentf-max-saved-items 25)
 
 (setq-default indent-tabs-mode nil)						;; Spaces instead of tabs
 (setq-default tab-width 2)			              ;; Default tab width
@@ -57,6 +61,22 @@
 (use-package zenburn-theme
   :ensure t
   :config (load-theme 'zenburn t))
+
+(use-package dashboard
+  :ensure t
+  :config
+  (dashboard-setup-startup-hook))
+;; Set the title
+(setq dashboard-banner-logo-title "Welcome Johannes")
+;; Set the banner
+(setq dashboard-startup-banner 'logo)
+;; Center content
+(setq dashboard-center-content t)
+;; Customize widgets
+(setq dashboard-items '((recents . 5)
+                        (bookmarks . 5)))
+;; Disable random footnote
+(setq dashboard-set-footer nil)
 
 (add-to-list 'display-buffer-alist
              '("\*vterm\*"
@@ -113,7 +133,7 @@
   :bind ("M-s" . avy-goto-char))
 
 (use-package org-bullets
-  :ensure t
+      :ensure t
   :config
   (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 
@@ -128,13 +148,11 @@
 (add-hook 'org-mode-hook #'auto-fill-mode)
 (add-hook 'org-mode-hook #'visual-line-mode)
 
+(add-to-list 'org-link-frame-setup '(file . find-file))
+
 (global-set-key (kbd "C-c l") #'org-store-link)
 (global-set-key (kbd "C-c a") #'org-agenda)
 (global-set-key (kbd "C-c c") #'org-capture)
-
-;; What does the \C mean in this context? 
-;; (define-key global-map "\C-cl" 'org-store-link)
-;; (define-key global-map "\C-ca" 'org-agenda)
 
 (use-package citar
   :custom
@@ -149,7 +167,7 @@
 
 (use-package citar-embark
   :after citar embar
-  :no-require
+  :no-require t
   :config (citar-embark-mode))
 
 (setq org-capture-templates
@@ -193,6 +211,32 @@
   (setq jedi:complete-on-dot t))
 
 (use-package ein
-  :ensure t
+      :ensure t
   :config
   (setq ein:completion-backend 'ein:use-ac-jedi-backend))
+
+(use-package julia-mode
+  :ensure t)
+
+(use-package julia-repl
+  :ensure t
+  :hook (julia-mode . julia-repl-mode)
+
+  :config
+  ;; Set the terminal backend
+  (julia-repl-set-terminal-backend 'vterm)
+
+  ;; Keybindings for quickly sending code to the REPL
+  (define-key julia-repl-mode-map (kbd "<M-RET>") 'my/julia-repl-send-cell))
+
+(defun my/julia-repl-send-cell() 
+  ;; "Send the current julia cell (delimited by ###) to the julia shell"
+  (interactive)
+  (save-excursion
+    (setq cell-begin (if (re-search-backward "^###" nil t) (point) (point-min))))
+  (save-excursion
+    (setq cell-end (if (re-search-forward "^###" nil t) (point) (point-max))))
+  (set-mark cell-begin)
+  (goto-char cell-end)
+  (julia-repl-send-region-or-line)
+  (next-line))
