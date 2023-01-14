@@ -38,6 +38,7 @@ First we need to use the built-in package manager to actually download
     (package-refresh-contents)
     (package-install 'use-package))
 #+end_src
+
 Then we can actually load =use-package=
 #+begin_src emacs-lisp :tangle yes
   ;; Load use-package by requiring it, to ensure it has been loaded
@@ -45,7 +46,7 @@ Then we can actually load =use-package=
     (require 'use-package))
 #+end_src
 
-* Changing Emacs default behaviors
+* Changing Emacs default behavior
 ** Suppressing default behaviors
 There are some default behaviors which are just annoying, such as the startup
 splash screen or the sound on error or EOF. We can suppress some more things
@@ -85,6 +86,7 @@ long as these are not originating from a package that is handled by
   (set-face-attribute 'default nil :font "Roboto Mono Medium")
   (set-face-attribute 'default nil :height 115)
 #+end_src
+
 *** Global keybindings unrelated to =use-package=
 #+begin_src emacs-lisp :tangle yes
 (global-set-key (kbd "M-o") #'other-window)
@@ -109,7 +111,7 @@ just keep with the defaults (2) for now.
         )
 #+end_src
 
-* Switching between windows
+** Switching between windows
 When programming I often have more than one window open. When you split a window
 vertically using =C-x 3= the default behavior is to keep the focus (the
 cursor) in the previous window. This is annoying. Luckily, there has been a
@@ -125,17 +127,34 @@ vertical split as I basically never find myself splitting horizontally.
   (global-set-key (kbd "C-x 3") 'split-and-follow-vertically)
 #+end_src
 
+** Showing emoji
+As is know, emoji are critical for developers and scientists. But really, they
+often explain a concept in a very concise manner and are incredibly useful when
+used sparingly. The font that I have chosen personally ([[https://fonts.google.com/specimen/Roboto+Mono][Roboto Mono]]) does not
+contain emoji support (as far as I know). So, we need to set the emoji font as
+described [[https://github.com/emacs-lsp/lsp-mode/issues/2291#issuecomment-813097394][here]].
+#+begin_src emacs-lisp :tangle yes
+  ;; Emoji: 😄, 🤦, 🏴
+  (set-fontset-font t 'symbol "Apple Color Emoji")
+  (set-fontset-font t 'symbol "Noto Color Emoji" nil 'append)
+  (set-fontset-font t 'symbol "Segoe UI Emoji" nil 'append)
+  (set-fontset-font t 'symbol "Symbola" nil 'append)
+#+end_src
+
 * Adding a terminal to Emacs
 When programming I often find myself reaching for a terminal window to, for
 example, quickly install a package using =apt=, browsing through my current
 working directory (although I should probably do this using Emacs...), and many
 other things. As we do not want to leave the safety of our carefully crafted
-Emacs environment, we need a terminal window. I currently use [[https://github.com/akermu/emacs-libvterm][vterm]], as I found
+Emacs environment, we need a terminal window. I currently use
+[[https://github.com/akermu/emacs-libvterm][vterm]], as I found
 it provides the most complete terminal experience. Do note that it is still in
 α-stage, so please be aware of (fundamental) changes down the line!
 #+begin_src emacs-lisp :tangle yes
   (use-package vterm
-    :ensure t)
+    :ensure t
+    :init
+    (setq vterm-timer-delay 0.01))
 #+end_src
 Afterwards you might want to [[https://github.com/akermu/emacs-libvterm#shell-side-configuration][configure the shell]] as well.
 Additionally we choose a global key combination to open vterm, in this case
@@ -158,6 +177,7 @@ there that is super easy on the eyes and has pastel colors!
     :ensure t
     :config (load-theme 'zenburn t))
 #+end_src
+
 However, as I *really* like pastel colors, the [[https://github.com/mvarela/Sunburn-Theme][Sunburn]] color theme scratches the
 right itch as it includes more shades of gray and purple -- but still very
 pastel! Sadly, it is not available on ELPA/MELPA, so we need to install and load
@@ -169,6 +189,7 @@ the future, combine the two to create the 'ultimate' /burn/-theme.
   (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/sunburn-theme-20231101.1")
   (load-theme 'sunburn)
 #+end_src
+
 Catppuccin also has a nice range of pastel colors in four different 'flavors'.
 #+begin_src emacs-lisp :tangle no
   (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/catppuccin-theme-20231101.1")
@@ -223,6 +244,16 @@ So, current modifications is just to include the column number in the modeline.
 #+begin_src emacs-lisp :tangle yes
   (setq column-number-mode t)
 #+end_src
+In some cases, the modeline becomes too full (looking at you =lsp-mode=). We can
+hide (i.e. [[https://github.com/myrjola/diminish.el][diminish]]) their appearance while they still work for us in the
+background. This is useful for many packages that are basically always loaded,
+like snippets, =which-key=, etc.
+#+begin_src emacs-lisp :tangle yes
+  (use-package diminish
+    :ensure t)
+  (diminish 'eldoc-mode)
+  (diminish 'visual-line-mode)
+#+end_src
 
 ** Change the frame title
 The frame title is displayed on top of the Emacs frame and can be configured as
@@ -232,7 +263,22 @@ display the filename and the Emacs version for now
 (setq frame-title-format '("" "[%b] - Emacs " emacs-version))
 #+end_src
 
-* Interactive completion
+* Enriching Emacs functionality
+** Navigating buffers
+Navigating the current buffer can sometimes be a hassle as you have to press the
+arrow keys or, in extreme cases, use the mouse (/shudder/). Sometimes you need
+to be at very specific points in a document, and luckily for me there exists a
+beautiful package that handles this: =avy=. While explaining it sounds complex,
+it boils down to =M-x avy-goto-char= (rebound to =M-s=) and pressing a specific
+letter or key. On each instance of the key a letter will appear and pressing
+that letter will bring you immediately to that destination. Just try it!
+#+begin_src emacs-lisp :tangle yes
+(use-package avy
+  :ensure t
+  :bind ("M-s" . avy-goto-char))
+#+end_src
+
+** Interactive completion of Emacs functions
 [[https://github.com/minad/vertico][Vertico]] provides us with a minimalistic vertical completion UI that is based on
 the default completion system. Simple, yet powerful.
 #+begin_src emacs-lisp :tangle yes
@@ -240,12 +286,14 @@ the default completion system. Simple, yet powerful.
     :ensure t
     :init (vertico-mode))
 #+end_src
+
 And let Vertico persist the history over Emacs restarts, so we can, if we want,
 quickly re-open files that we opened in a previous session.
 #+begin_src emacs-lisp :tangle yes
   (use-package savehist
     :init (savehist-mode))
 #+end_src
+
 As with Vertico the order of the regexp matters, it is often convenient to
 invoke [[https://github.com/oantolin/orderless][Orderless]], which makes the completion style match multiple regexps in any
 order. For example, I can "M-x ins pac" and "M-x package-install" will likely be
@@ -257,7 +305,20 @@ the top candidate.
     (completion-styles '(orderless basic))
     (completion-category-overrides '((file (styles basic partial-completion)))))
 #+end_src
-
+** Show active bindings using =which-key=
+[[https://github.com/justbur/emacs-which-key/][=which-key=]] is a minor mode for Emacs that displays the key bindings following
+your currently entered incomplete command in a popup. This is super useful when
+using new packages as you often are not aware of all the shortcuts. With
+=which-key= you only have to remember the prefix, not the entire command. For
+example, you can press =C-x= and after (the default of) 1 second the minibuffer
+will expand with the keybindings that follow =C-x=.
+#+begin_src emacs-lisp :tangle yes
+  (use-package which-key
+    :ensure t
+    :config
+    (which-key-mode)
+    :diminish which-key-mode)
+#+end_src
 ** Annotations in the minibuffer
 In many cases, especially when using relatively obscure Emacs functionality, it
 becomes unclear what a specific command does. [[https://github.com/minad/marginalia][Marginalia]] adds annotation in the
@@ -271,7 +332,7 @@ completion frameworks.
     (marginalia-mode))
 #+end_src
 
-* Mini-buffer actions
+** Mini-buffer actions with Embark
 When having the cursor at a specific point when using Emacs, you often need to
 think about what to do with a selected region before you can do this. However,
 it can be easier. [[https://github.com/oantolin/embark][Embark]] enables you to suggest what to do with a specific
@@ -308,6 +369,7 @@ file:snippets/ directory.
 #+begin_src emacs-lisp :tangle yes
   (use-package yasnippet
     :ensure t
+    :diminish yas-global-mode
     :config (yas-global-mode))
   (use-package yasnippet-snippets
     :after yasnippet
@@ -315,21 +377,61 @@ file:snippets/ directory.
     :config (yasnippet-snippets-initialize))
 #+end_src
 
-* Navigating buffers with ease
-Navigating the current buffer can sometimes be a hassle as you have to press the
-arrow keys or, in extreme cases, use the mouse (/shudder/). Sometimes you need
-to be at very specific points in a document, and luckily for me there exists a
-beautiful package that handles this: =avy=. While explaining it sounds complex,
-it boils down to =M-x avy-goto-char= (rebound to =M-s=) and pressing a specific
-letter or key. On each instance of the key a letter will appear and pressing
-that letter will bring you immediately to that destination. Just try it!
+* Mode-specific configurations
+** Text completion using Company
+[[https://company-mode.github.io/][Company]] (COMPletion ANYwhere) is a text completion framework for Emacs. It pops
+up a small UI that shows you candidates for the symbols you have currently
+typed, making development much faster and avoid spelling mistakes, e.g. in
+function names.
 #+begin_src emacs-lisp :tangle yes
-(use-package avy
-  :ensure t
-  :bind ("M-s" . avy-goto-char))
+  (use-package company
+    :ensure t
+    :diminish global-company-mode
+    :hook (after-init-hook . global-company-mode))
+#+end_src
+** Language server
+When coding one wants a so-called 'IDE-like experience', in that your text
+editor recognizes previously defined function for autocompletion, displays
+documentation of functions, checks syntax errors, etc. Emacs provides these
+features using =lsp-mode=; a mode that supports *all* language features defined
+in the Language Server Protocol (LSP). As always, Emacs' =lsp-mode= is highly
+flexible and easy to configure and works well with popular Emacs packages like
+=company=, =flycheck= and =projectile=.
+#+begin_src emacs-lisp :tangle yes
+  (use-package lsp-mode
+    :ensure t  
+    :commands (lsp lsp-deferred)
+    :init
+    ;; Usually the =lsp-keymap-prefix= is bound to "C-c l", but this is already
+    ;; bound to the (very useful!) =org-store-link=, which we do not want to
+    ;; override. "C-c o" ('o' for option) was empty, so use it here.
+    (setq lsp-keymap-prefix "C-c o")
+    :config
+    (define-key lsp-mode-map (kbd lsp-keymap-prefix) lsp-command-map)
+    :hook (;; add modes
+           (julia-mode . lsp-deferred)
+           ;; =lsp-enable-which-key-integration= gives us descriptions of what the keys
+           ;; do, which helps us figure out what they do when using =lsp-mode=.
+           (lsp-mode . lsp-enable-which-key-integration)))
 #+end_src
 
-* Mode-specific configurations
+*** Languages
+  For =lsp-mode= to function we need to install the language server for the
+  languages that we are interested in. Currently, i do most of my development in
+  Julia and Python, so those will be the language servers that will be installed
+  below.
+  !! IMPORTANT: it is important to add a hook to =lsp-mode= for the specifical
+  =<language>-mode= when defining and configuring the mode (see [[*Julia configuration][here]] for an example).
+  *Languages currently supported*
+  1. [[*julia][Julia]]
+  2. ...
+**** Julia
+#+begin_src emacs-lisp :tangle yes
+  (use-package lsp-julia
+    :ensure t
+    :config
+    (setq lsp-julia-default-environment "~/.julia/environments/v1.8"))
+#+end_src
 
 ** Org mode
 Org mode comes with a lot of possible configurations, so these are just a very
@@ -346,20 +448,24 @@ the 'ellipsis'.
 
   (setq org-ellipsis "⤵")
 #+end_src
+
 Support shift selecting blocks of text as well, as described [[https://orgmode.org/manual/Conflicts.html][here]].
 #+begin_src emacs-lisp :tangle yes
   (setq org-support-shift-select t)
 #+end_src
+
 Next up is changing the look of source code blocks (like the elisp blocks in
 this Org file).
 #+begin_src emacs-lisp :tangle yes
   (setq org-src-fontify-natively t)
 #+end_src
+
 Change the default behavior of Org timestamps to actually note the time
 and date when logging TODO's.
 #+begin_src emacs-lisp :tangle yes
   (setq org-log-done t)
 #+end_src
+
 It is inconvenient to have to =M-x auto-fill-mode= every time you open an Org
 file. However, line wrapping (not only visually line wrapping, as when using
 =visual-line-mode-) is basically a must. Therefore, we add a hook that enables
@@ -368,6 +474,7 @@ this every time we open an Org file.
   (add-hook 'org-mode-hook #'auto-fill-mode)
   (add-hook 'org-mode-hook #'visual-line-mode)
 #+end_src
+
 Org links are by default openen in another window (i.e. it splits the current
 window in 2), which I think is undesired in many cases other than just quickly
 checking the file out. To change this default behavior, we need to change the
@@ -375,7 +482,6 @@ value of =org-link-frame-setup=
 #+begin_src emacs-lisp :tangle yes
   (add-to-list 'org-link-frame-setup '(file . find-file))
 #+end_src
-
 
 *** Global org keys
 I currently do not use a lot or Org functionality, so I should update this
@@ -386,6 +492,7 @@ with them.
   (global-set-key (kbd "C-c a") #'org-agenda)
   (global-set-key (kbd "C-c c") #'org-capture)
 #+end_src
+
 *** Org-mode configuration
 **** Citation with citar
 As we would like to cite items from some =.bib= file (perhaps one that is
@@ -406,6 +513,7 @@ themselves if we want.
     :bind
     (:map org-mode-map :package org ("C-c i c" . #'org-cite-insert)))
 #+end_src
+
 To ensure that Citar works well together with [[Mini-buffer actions][Embark]] we load the =citar-embark=
 package that adds contextual access in the minibuffer.
 #+begin_src emacs-lisp :tangle yes
@@ -437,6 +545,7 @@ entries and put these under the heading 'Tasks' in our main task =.org= file.
            ("C-C n i" . org-roam-node-insert))
     :config (org-roam-setup))
 #+end_src
+
 **** TODO Use Org-roam more often, make a sensible configuration and write some supporting text on the configuration. 
 
 ** LaTeX configuration
@@ -456,6 +565,7 @@ writing an formatting TeX files in Emacs.
     (setq TeX-parse-self t)
     (setq-default TeX-master nil))
 #+end_src
+
 As I often use a tree structured input for LaTeX files, e.g. as with =\input= 
 or =\include=, we should let AUCTeX always ask for the master file when opening
 a nex =.tex= file.
@@ -467,16 +577,19 @@ dpi settings, I prefer to use a better PDF-viewer instead: [[https://wiki.gnome.
   (setq TeX-view-program-list '(("Evince" "evince --page-index=%(outpage) %o")))
   (setq TeX-view-program-selection '((output-pdf "Evince")))
 #+end_src
+
 Additionaly, when we save a TeX file we want to automatically re-run the
 compilation such that the PDF is updated, so we 'correlate' the TeX and the PDF.
 #+begin_src emacs-lisp :tangle yes
   (add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
 #+end_src
+
 And update the PDF buffers after a successful LaTeX run.
 #+begin_src emacs-lisp :tangle yes
   (add-hook 'TeX-after-compilation-finished-functions
             #'TeX-revert-document-buffer)
 #+end_src
+
 Finally, we change the keybinding of the 'save-render-show' procedure when in
 LaTeX-mode.
 ** Markdown configuration
@@ -501,6 +614,7 @@ things to make writing Python code less of a chore. First, let us fix the tab wi
         (setq tab-width 4)
         (setq python-indent-offset 4)))
 #+end_src
+
 *** Autocompletion
 Currently I use [[http://tkf.github.io/emacs-jedi/released/#][Jedi.el]] for Python auto-completion. Besides completion is also
 enables a small pop-up screen that shows information about a function or class,
@@ -544,8 +658,12 @@ widespread as Python's, there is significant movement leading to a bunch of
 tools (for Emacs). The most important one is [[https://github.com/JuliaEditorSupport/julia-emacs][Julia-mode]].
 #+begin_src emacs-lisp :tangle yes
   (use-package julia-mode
-    :ensure t)
+    :ensure t
+    ;; Specify the hook that connects =lsp-mode=
+    :hook (julia-mode-hook . lsp-mode))
 #+end_src
+Note: =julia-mode= does not highlight syntax very well.
+
 The Julia REPL is quite a useful tool when writing and debugging, so we want to
 add support for a good REPL in Emacs. Sadly, [[https://github.com/tpapp/julia-repl][julia-repl]] is not not available
 through MELPA, so we cannot use =use-package= to automate the installation but

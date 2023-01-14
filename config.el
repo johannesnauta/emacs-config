@@ -53,8 +53,16 @@
   (other-window 1))
 (global-set-key (kbd "C-x 3") 'split-and-follow-vertically)
 
+;; Emoji: 😄, 🤦, 🏴
+(set-fontset-font t 'symbol "Apple Color Emoji")
+(set-fontset-font t 'symbol "Noto Color Emoji" nil 'append)
+(set-fontset-font t 'symbol "Segoe UI Emoji" nil 'append)
+(set-fontset-font t 'symbol "Symbola" nil 'append)
+
 (use-package vterm
-  :ensure t)
+  :ensure t
+  :init
+  (setq vterm-timer-delay 0.01))
 
 (global-set-key (kbd "C-`") `vterm)
 
@@ -87,7 +95,16 @@
 
 (setq column-number-mode t)
 
+(use-package diminish
+  :ensure t)
+(diminish 'eldoc-mode)
+(diminish 'visual-line-mode)
+
 (setq frame-title-format '("" "[%b] - Emacs " emacs-version))
+
+(use-package avy
+  :ensure t
+  :bind ("M-s" . avy-goto-char))
 
 (use-package vertico
   :ensure t
@@ -101,6 +118,12 @@
   :custom
   (completion-styles '(orderless basic))
   (completion-category-overrides '((file (styles basic partial-completion)))))
+
+(use-package which-key
+  :ensure t
+  :config
+  (which-key-mode)
+  :diminish which-key-mode)
 
 (use-package marginalia
   :ensure t
@@ -122,15 +145,38 @@
 
 (use-package yasnippet
   :ensure t
+  :diminish yas-global-mode
   :config (yas-global-mode))
 (use-package yasnippet-snippets
   :after yasnippet
   :ensure t
   :config (yasnippet-snippets-initialize))
 
-(use-package avy
+(use-package company
   :ensure t
-  :bind ("M-s" . avy-goto-char))
+  :diminish global-company-mode
+  :hook (after-init-hook . global-company-mode))
+
+(use-package lsp-mode
+  :ensure t  
+  :commands (lsp lsp-deferred)
+  :init
+  ;; Usually the =lsp-keymap-prefix= is bound to "C-c l", but this is already
+  ;; bound to the (very useful!) =org-store-link=, which we do not want to
+  ;; override. "C-c o" ('o' for option) was empty, so use it here.
+  (setq lsp-keymap-prefix "C-c o")
+  :config
+  (define-key lsp-mode-map (kbd lsp-keymap-prefix) lsp-command-map)
+  ;; =lsp-enable-which-key-integration= gives us descriptions of what the keys
+  ;; do, which helps us figure out what they do when using =lsp-mode=.
+  :hook (;; add modes
+         (julia-mode . lsp-deferred)
+         (lsp-mode . lsp-enable-which-key-integration)))
+
+(use-package lsp-julia
+  :ensure t
+  :config
+  (setq lsp-julia-default-environment "~/.julia/environments/v1.8"))
 
 (use-package org-bullets
       :ensure t
@@ -216,7 +262,9 @@
   (setq ein:completion-backend 'ein:use-ac-jedi-backend))
 
 (use-package julia-mode
-  :ensure t)
+  :ensure t
+  ;; Specify the hook that connects =lsp-mode=
+  :hook (julia-mode-hook . lsp-mode))
 
 (use-package julia-repl
   :ensure t
