@@ -13,6 +13,12 @@
 (eval-when-compile
   (require 'use-package))
 
+(use-package exec-path-from-shell
+  :ensure t)
+;; Sets $MANPATH, $PATH and exec-path from your shell, only when using the GUI.
+(when (memq window-system '(mac ns x))
+  (exec-path-from-shell-initialize))
+
 (setq inhibit-startup-message t)  ;; Suppress startup splash screen
 (setq ring-bell-function 'ignore) ;; Suppress sound on error or EOF
 (menu-bar-mode -1)                ;; Turn off menu bar
@@ -167,10 +173,10 @@
   (setq lsp-keymap-prefix "C-c o")
   :config
   (define-key lsp-mode-map (kbd lsp-keymap-prefix) lsp-command-map)
-  ;; =lsp-enable-which-key-integration= gives us descriptions of what the keys
-  ;; do, which helps us figure out what they do when using =lsp-mode=.
   :hook (;; add modes
          (julia-mode . lsp-deferred)
+         ;; =lsp-enable-which-key-integration= gives us descriptions of what the keys
+         ;; do, which helps us figure out what they do when using =lsp-mode=.
          (lsp-mode . lsp-enable-which-key-integration)))
 
 (use-package lsp-julia
@@ -179,7 +185,7 @@
   (setq lsp-julia-default-environment "~/.julia/environments/v1.8"))
 
 (use-package org-bullets
-      :ensure t
+  :ensure t
   :config
   (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 
@@ -235,8 +241,8 @@
   (setq TeX-parse-self t)
   (setq-default TeX-master nil))
 
-(setq TeX-view-program-list '(("Evince" "evince --page-index=%(outpage) %o")))
-(setq TeX-view-program-selection '((output-pdf "Evince")))
+;; (setq TeX-view-program-list '(("Evince" "evince --page-index=%(outpage) %o")))
+(setq TeX-view-program-selection '((output-pdf "Zathura")))
 
 (add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
 
@@ -257,7 +263,7 @@
   (setq jedi:complete-on-dot t))
 
 (use-package ein
-      :ensure t
+  :ensure t
   :config
   (setq ein:completion-backend 'ein:use-ac-jedi-backend))
 

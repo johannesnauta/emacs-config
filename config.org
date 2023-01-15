@@ -47,6 +47,20 @@ Then we can actually load =use-package=
 #+end_src
 
 * Changing Emacs default behavior
+** Ensure environment variables inside Emacs look the same as in the shell
+In some cases, e.g. when not starting Emacs from the terminal, Emacs' shell has
+different environment variables than the user's shell. This is inconvenient as
+it might result in some packages not finding the binaries of installed
+libraries. A prime example is LaTeX, of which the =texlive= installation is
+exported to the ="$PATH"= variable. Therefore, we use =exec-path-from-shell= to
+ensure that Emacs's environment variables are the same as in the shell.
+#+begin_src emacs-lisp :tangle yes
+  (use-package exec-path-from-shell
+    :ensure t)
+  ;; Sets $MANPATH, $PATH and exec-path from your shell, only when using the GUI.
+  (when (memq window-system '(mac ns x))
+    (exec-path-from-shell-initialize))
+#+end_src
 ** Suppressing default behaviors
 There are some default behaviors which are just annoying, such as the startup
 splash screen or the sound on error or EOF. We can suppress some more things
@@ -565,21 +579,29 @@ writing an formatting TeX files in Emacs.
     (setq TeX-parse-self t)
     (setq-default TeX-master nil))
 #+end_src
-
-As I often use a tree structured input for LaTeX files, e.g. as with =\input= 
-or =\include=, we should let AUCTeX always ask for the master file when opening
-a nex =.tex= file.
 While there exist some pdf tools that can display the rendered PDF in an Emacs
 window and provide Emacs functionality (such as [[https://www.emacswiki.org/emacs/IncrementalSearch][isearch]]), the viewers convert
 the PDF to a PNG and thereby losing resolution. While you can fiddle with the
-dpi settings, I prefer to use a better PDF-viewer instead: [[https://wiki.gnome.org/Apps/Evince][Evince]].
-#+begin_src emacs-lisp :tangle yes
+dpi settings, I prefer to use a better PDF-viewer instead
+There are, of course, multiple options. One of the first I used happily was
+[[https://wiki.gnome.org/Apps/Evince][Evince]]. For Evince, the following configuration is given.
+#+begin_src emacs-lisp :tangle no
   (setq TeX-view-program-list '(("Evince" "evince --page-index=%(outpage) %o")))
   (setq TeX-view-program-selection '((output-pdf "Evince")))
 #+end_src
+However, I found that with Evince it is difficult to change the background color
+without hacking into the source code. The white background, however, is quite a
+strain on the eyes during development. And it is not pastel enough of
+course. Luckily for us, there exists a PDF viewer, called [[https://pwmt.org/projects/zathura/][Zathura]], which is
+highly custimizable and minimalistic. Moreover, the [[https://github.com/catppuccin/catppuccin][catppuccin team]] has made
+some [[https://github.com/catppuccin/zathura][nice themes]] available for Zathura, so we use one of the themes and use
+Zathura as our main PDF-viewer.
+#+begin_src emacs-lisp :tangle yes
+  (setq TeX-view-program-selection '((output-pdf "Zathura")))
+#+end_src
 
-Additionaly, when we save a TeX file we want to automatically re-run the
-compilation such that the PDF is updated, so we 'correlate' the TeX and the PDF.
+Additionaly, when we recompile a TeX file we want the PDF viewer to see the
+updated PDF, so we 'correlate' the TeX and the PDF.
 #+begin_src emacs-lisp :tangle yes
   (add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
 #+end_src
