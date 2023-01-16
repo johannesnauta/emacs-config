@@ -175,6 +175,7 @@
   (define-key lsp-mode-map (kbd lsp-keymap-prefix) lsp-command-map)
   :hook (;; add modes
          (julia-mode . lsp-deferred)
+         ;; (julia-ts-mode . lsp-deferred)
          ;; =lsp-enable-which-key-integration= gives us descriptions of what the keys
          ;; do, which helps us figure out what they do when using =lsp-mode=.
          (lsp-mode . lsp-enable-which-key-integration)))
@@ -205,6 +206,12 @@
 (global-set-key (kbd "C-c l") #'org-store-link)
 (global-set-key (kbd "C-c a") #'org-agenda)
 (global-set-key (kbd "C-c c") #'org-capture)
+
+(setq org-format-latex-options (plist-put org-format-latex-options :scale 1.5))
+
+(use-package org-fragtog
+  :ensure t
+  :hook (org-mode . org-fragtog-mode))
 
 (use-package citar
   :custom
@@ -241,7 +248,6 @@
   (setq TeX-parse-self t)
   (setq-default TeX-master nil))
 
-;; (setq TeX-view-program-list '(("Evince" "evince --page-index=%(outpage) %o")))
 (setq TeX-view-program-selection '((output-pdf "Zathura")))
 
 (add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
@@ -267,12 +273,10 @@
   :config
   (setq ein:completion-backend 'ein:use-ac-jedi-backend))
 
-(add-to-list 'load-path "~/.emacs.d/local-packages/julia-ts-mode/")
-(require 'julia-ts-mode)
-;; (use-package julia-ts-mode
-;;   :ensure nil
-;;   :load-path "~/.emacs.d/local-packages/julia-ts-mode/"
-;;   :hook (julia-ts-mode-hook . lsp-mode))
+(use-package julia-mode
+  :ensure t
+  ;; Specify the hook that connects =lsp-mode=
+  :hook (julia-mode-hook . lsp-mode))
 
 (use-package julia-repl
   :ensure t
