@@ -371,6 +371,75 @@ be tailored to your needs if needed.
                    (window-parameters (mode-line-format . none)))))
 #+end_src
 
+
+
+** Git magick with Magit
+[[https://magit.vc/][Magit]] is a complete text- and keyboard-based user interface to Git. In the
+background, Magit just runs your standard Git commands. However, it provides you
+with extensive flexibility when using those commands, and lets you additionally
+discover a whole set of rarely used features that Git entails.
+#+begin_src emacs-lisp :tangle yes
+  (use-package magit
+    :ensure t
+    :config
+    (setq magit-display-buffer-function 'magit-display-buffer-fullframe-status-v1))
+#+end_src
+*** Showing diffs and resolving conflicts with Hydra and smerge
+While conflicts can be resolved using the built-in =smerge-mode=, you normally
+have to invoke the chosen 'smerge'-command for each diff you'd like to
+resolve. This is cumbersome. Here, [[https://github.com/abo-abo/hydra][Hydra]] comes into play. Briefly, Hydra allows
+sticky keys that enable successive keybinds without invoking the initial
+prefix. For example, if you have bound =C-c j= and =C-c k=, Hydra enables you to
+perform actions such as =C-c jjkk3j5k=, which saves a bunch of keys. While it
+might not always come in handy, in combination with smerge it is almost a
+necessity.
+#+begin_src emacs-lisp :tangle yes
+  (use-package hydra
+     :ensure t)
+#+end_src
+
+#+begin_src emacs-lisp :tangle yes
+  ;; Stolen from https://github.com/alphapapa/unpackaged.el#hydra 
+  (use-package smerge-mode
+    :config
+    (defhydra smerge-hydra
+      (:color pink :hint nil :post (smerge-auto-leave))
+      "
+  ^Move^       ^Keep^               ^Diff^                 ^Other^
+  ^^-----------^^-------------------^^---------------------^^-------
+  _n_ext       _b_ase               _<_: upper/base        _C_ombine
+  _p_rev       _u_pper              _=_: upper/lower       _r_esolve
+  ^^           _l_ower              _>_: base/lower        _k_ill current
+  ^^           _a_ll                _R_efine
+  ^^           _RET_: current       _E_diff
+  "
+      ("n" smerge-next)
+      ("p" smerge-prev)
+      ("b" smerge-keep-base)
+      ("u" smerge-keep-upper)
+      ("l" smerge-keep-lower)
+      ("a" smerge-keep-all)
+      ("RET" smerge-keep-current)
+      ("\C-m" smerge-keep-current)
+      ("<" smerge-diff-base-upper)
+      ("=" smerge-diff-upper-lower)
+      (">" smerge-diff-base-lower)
+      ("R" smerge-refine)
+      ("E" smerge-ediff)
+      ("C" smerge-combine-with-next)
+      ("r" smerge-resolve)
+      ("k" smerge-kill-current)
+      ("ZZ" (lambda ()
+              (interactive)
+              (save-buffer)
+              (bury-buffer))
+       "Save and bury buffer" :color blue)
+      ("q" nil "cancel" :color blue))
+    :hook (magit-diff-visit-file . (lambda ()
+                                     (when smerge-mode
+                                       (smerge-hydra/body)))))
+#+end_src
+
 * Emacs YASnippets
 No modern editor is complete without inserting large, pre-formatted textblocks
 into your files with the press of a button. What separates a fast programmer (or
@@ -442,10 +511,10 @@ flexible and easy to configure and works well with popular Emacs packages like
   2. ...
 **** Julia
 #+begin_src emacs-lisp :tangle yes
-  (use-package lsp-julia
-    :ensure t
-    :config
-    (setq lsp-julia-default-environment "~/.julia/environments/v1.8"))
+    (use-package lsp-julia
+      :ensure t
+      :config
+      (setq lsp-julia-default-environment "~/.julia/environments/v1.8"))
 #+end_src
 
 ** Org mode
@@ -733,9 +802,9 @@ have to resort to manually downloading the relevant =elisp= files.
     ;; "Send the current julia cell (delimited by ###) to the julia shell"
     (interactive)
     (save-excursion
-      (setq cell-begin (if (re-search-backward "^###" nil t) (point) (point-min))))
+      (setq cell-begin (if (re-search-backward "^#/" nil t) (point) (point-min))))
     (save-excursion
-      (setq cell-end (if (re-search-forward "^###" nil t) (point) (point-max))))
+      (setq cell-end (if (re-search-forward "^#/" nil t) (point) (point-max))))
     (set-mark cell-begin)
     (goto-char cell-end)
     (julia-repl-send-region-or-line)
