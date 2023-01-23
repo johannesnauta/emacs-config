@@ -1,3 +1,9 @@
 [submodule "local-packages/julia-ts-mode"]
 	path = local-packages/julia-ts-mode
 	url = https://github.com/ronisbr/julia-ts-mode.git
+[submodule "themes/rose-pine-theme-20232301"]
+	path = themes/rose-pine-theme-20232301
+	url = https://github.com/thongpv87/rose-pine-emacs.git
+[submodule "themes/catppuccin-theme-20231101.1"]
+	path = themes/catppuccin-theme-20231101.1
+	url = https://github.com/catppuccin/emacs
