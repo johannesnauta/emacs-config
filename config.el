@@ -39,8 +39,7 @@
 (setq-default fill-column 80)                 ;; Default column width
 (setq indent-line-function 'insert-tab)       ;; Indent current line(s) according to current major mode
 ;; Font and font size
-(set-face-attribute 'default nil :font "Roboto Mono Medium")
-(set-face-attribute 'default nil :height 115)
+(set-face-attribute 'default nil :family "Roboto Mono Medium" :height 115)
 
 (global-set-key (kbd "M-o") #'other-window)
 
@@ -208,7 +207,7 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
 
 (use-package company
   :ensure t
-  :diminish global-company-mode
+  :diminish company-mode
   :hook (after-init-hook . global-company-mode))
 
 (use-package lsp-mode
@@ -234,7 +233,7 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
   (setq lsp-julia-default-environment "~/.julia/environments/v1.8"))
 
 (use-package org-bullets
-  :ensure t
+      :ensure t
   :config
   (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 
@@ -296,7 +295,7 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
   (setq TeX-parse-self t)
   (setq-default TeX-master nil))
 
-(setq TeX-view-program-selection '((output-pdf "Zathura")))
+(setq TeX-view-program-selection '((output-pdf "Evince")))
 
 (add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
 
@@ -317,7 +316,7 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
   (setq jedi:complete-on-dot t))
 
 (use-package ein
-  :ensure t
+      :ensure t
   :config
   (setq ein:completion-backend 'ein:use-ac-jedi-backend))
 

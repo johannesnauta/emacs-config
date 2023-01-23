@@ -72,6 +72,7 @@ while we're at it.
   (tool-bar-mode -1)                ;; Turn off tool bar
   (setq scroll-conservatively 100)  ;; Make scrolling better
   (show-paren-mode 1)               ;; Highlight matching parentheses
+  (electric-indent-mode -1)         ;; Turn off indentation in files
 #+end_src
 
 ** Enabling default behaviors
@@ -189,6 +190,13 @@ there that is super easy on the eyes and has pastel colors!
   (use-package zenburn-theme
     :ensure t
     :config (load-theme 'zenburn t))
+#+end_src
+
+#+begin_src emacs-lisp :tangle no
+  (use-package autothemer
+    :ensure t)
+  (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/rose-pine-theme-20232301.1")
+  (load-theme 'rose-pine-moon-theme)
 #+end_src
 
 However, as I *really* like pastel colors, the [[https://github.com/mvarela/Sunburn-Theme][Sunburn]] color theme scratches the
