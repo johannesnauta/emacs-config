@@ -25,6 +25,7 @@
 (tool-bar-mode -1)                ;; Turn off tool bar
 (setq scroll-conservatively 100)  ;; Make scrolling better
 (show-paren-mode 1)               ;; Highlight matching parentheses
+(electric-indent-mode -1)         ;; Turn off indentation in files
 
 (global-display-line-numbers-mode 1)	;; Display line numbers in every buffer
 (defalias 'yes-or-no-p 'y-or-n-p)     ;; All confirmations to single letters
@@ -75,6 +76,16 @@
   :ensure t
   :config (load-theme 'zenburn t))
 
+(use-package autothemer
+  :ensure t)
+;; Add all theme subdirectories in ~/.emacs.d/themes/ to be discoverable
+;; by autothemer
+(let ((basedir "~/.emacs.d/themes/"))
+  (dolist (f (directory-files basedir))
+    (if (and (not (or (equal f ".") (equal f "..")))
+             (file-directory-p (concat basedir f)))
+        (add-to-list 'custom-theme-load-path (concat basedir f)))))
+
 (use-package dashboard
   :ensure t
   :config
@@ -84,12 +95,14 @@
 ;; Set the banner
 (setq dashboard-startup-banner 'logo)
 ;; Center content
-(setq dashboard-center-content t)
+;; (setq dashboard-center-content t)
 ;; Customize widgets
 (setq dashboard-items '((recents . 5)
                         (bookmarks . 5)))
 ;; Disable random footnote
 (setq dashboard-set-footer nil)
+;; Set initial buffer to *dashboard* (also when opened as client)
+(setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
 
 (add-to-list 'display-buffer-alist
              '("\*vterm\*"
@@ -100,10 +113,9 @@
 
 (setq column-number-mode t)
 
-(use-package diminish
-  :ensure t)
-(diminish 'eldoc-mode)
-(diminish 'visual-line-mode)
+(use-package minions
+  :ensure t
+  :config (minions-mode 1))
 
 (setq frame-title-format '("" "[%b] - Emacs " emacs-version))
 
@@ -198,7 +210,7 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
 
 (use-package yasnippet
   :ensure t
-  :diminish yas-global-mode
+  :diminish yas-minor-mode
   :config (yas-global-mode))
 (use-package yasnippet-snippets
   :after yasnippet
@@ -233,7 +245,7 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
   (setq lsp-julia-default-environment "~/.julia/environments/v1.8"))
 
 (use-package org-bullets
-      :ensure t
+  :ensure t
   :config
   (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 
@@ -316,7 +328,7 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
   (setq jedi:complete-on-dot t))
 
 (use-package ein
-      :ensure t
+  :ensure t
   :config
   (setq ein:completion-backend 'ein:use-ac-jedi-backend))
 

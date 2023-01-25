@@ -10,3 +10,9 @@
 [submodule "themes/rose-pine-emacs-20230123.1"]
 	path = themes/rose-pine-emacs-20230123.1
 	url = https://github.com/thongpv87/rose-pine-emacs
+[submodule "themes/kanagawa-theme-20230125.1"]
+	path = themes/kanagawa-theme-20230125.1
+	url = https://github.com/jasonm23/emacs-theme-kanagawa
+[submodule "local-packages/lambda-line"]
+	path = local-packages/lambda-line
+	url = https://github.com/Lambda-Emacs/lambda-line

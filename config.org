@@ -192,11 +192,16 @@ there that is super easy on the eyes and has pastel colors!
     :config (load-theme 'zenburn t))
 #+end_src
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp :tangle yes
   (use-package autothemer
     :ensure t)
-  (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/rose-pine-theme-20232301.1")
-  (load-theme 'rose-pine-moon-theme)
+  ;; Add all theme subdirectories in ~/.emacs.d/themes/ to be discoverable
+  ;; by autothemer
+  (let ((basedir "~/.emacs.d/themes/"))
+    (dolist (f (directory-files basedir))
+      (if (and (not (or (equal f ".") (equal f "..")))
+               (file-directory-p (concat basedir f)))
+          (add-to-list 'custom-theme-load-path (concat basedir f)))))
 #+end_src
 
 However, as I *really* like pastel colors, the [[https://github.com/mvarela/Sunburn-Theme][Sunburn]] color theme scratches the
@@ -233,12 +238,14 @@ actually fit my preferred style, although it has some potential!
   ;; Set the banner
   (setq dashboard-startup-banner 'logo)
   ;; Center content
-  (setq dashboard-center-content t)
+  ;; (setq dashboard-center-content t)
   ;; Customize widgets
   (setq dashboard-items '((recents . 5)
                           (bookmarks . 5)))
   ;; Disable random footnote
   (setq dashboard-set-footer nil)
+  ;; Set initial buffer to *dashboard* (also when opened as client)
+  (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
 #+end_src
 
 ** Change how [[https://github.com/akermu/emacs-libvterm][vterm]] is displayed when opened
@@ -265,15 +272,16 @@ So, current modifications is just to include the column number in the modeline.
 #+begin_src emacs-lisp :tangle yes
   (setq column-number-mode t)
 #+end_src
-In some cases, the modeline becomes too full (looking at you =lsp-mode=). We can
-hide (i.e. [[https://github.com/myrjola/diminish.el][diminish]]) their appearance while they still work for us in the
-background. This is useful for many packages that are basically always loaded,
-like snippets, =which-key=, etc.
+Minor-modes rapidly clutter the modeline, especially if they have long messages
+(looking at you LSP-mode). While the actual active minor modes are actually not
+often of interest -- especially once they are activated and used often in the
+same workflow. [[https://github.com/tarsius/minions][minions]] can help with that and basically collapses all minor
+modes into a =-= (dash). So while they can still be inspected if necessary, they
+do not always clutter the modeline.
 #+begin_src emacs-lisp :tangle yes
-  (use-package diminish
-    :ensure t)
-  (diminish 'eldoc-mode)
-  (diminish 'visual-line-mode)
+  (use-package minions
+    :ensure t
+    :config (minions-mode 1))
 #+end_src
 
 ** Change the frame title
@@ -458,7 +466,7 @@ file:snippets/ directory.
 #+begin_src emacs-lisp :tangle yes
   (use-package yasnippet
     :ensure t
-    :diminish yas-global-mode
+    :diminish yas-minor-mode
     :config (yas-global-mode))
   (use-package yasnippet-snippets
     :after yasnippet
