@@ -61,7 +61,7 @@ ensure that Emacs's environment variables are the same as in the shell.
   (when (memq window-system '(mac ns x))
     (exec-path-from-shell-initialize))
 #+end_src
-** Suppressing default behaviors
+*** Suppressing default behaviors
 There are some default behaviors which are just annoying, such as the startup
 splash screen or the sound on error or EOF. We can suppress some more things
 while we're at it.
@@ -75,7 +75,7 @@ while we're at it.
   (electric-indent-mode -1)         ;; Turn off indentation in files
 #+end_src
 
-** Enabling default behaviors
+*** Enabling default behaviors
 In contrast, some behavior is not turned on by default, so we do that here
 #+begin_src emacs-lisp :tangle yes
   (global-display-line-numbers-mode 1)	;; Display line numbers in every buffer
@@ -87,7 +87,7 @@ In contrast, some behavior is not turned on by default, so we do that here
   (setq recentf-max-saved-items 25)
 #+end_src
 
-** Specifying other defaults
+*** Specifying other defaults
 Finally, there are some defaults that are sensible to set, such as the TAB
 width, among others. You can define other global keybindings here as well, as
 long as these are not originating from a package that is handled by
@@ -101,12 +101,12 @@ long as these are not originating from a package that is handled by
   (set-face-attribute 'default nil :family "Roboto Mono Medium" :height 115)
 #+end_src
 
-*** Global keybindings unrelated to =use-package=
+**** Global keybindings unrelated to =use-package=
 #+begin_src emacs-lisp :tangle yes
 (global-set-key (kbd "M-o") #'other-window)
 #+end_src
 
-** Changing where backups are stored
+*** Changing where backups are stored
 Emacs, just like Vim, makes regular backups of file that are undergoing active
 editing. This feature is very nice as it might save you at some point when you
 make a mistake. However, the Emacs backup files quickly clutter your inventory
@@ -125,7 +125,7 @@ just keep with the defaults (2) for now.
         )
 #+end_src
 
-** Switching between windows
+*** Switching between windows
 When programming I often have more than one window open. When you split a window
 vertically using =C-x 3= the default behavior is to keep the focus (the
 cursor) in the previous window. This is annoying. Luckily, there has been a
@@ -141,7 +141,7 @@ vertical split as I basically never find myself splitting horizontally.
   (global-set-key (kbd "C-x 3") 'split-and-follow-vertically)
 #+end_src
 
-** Showing emoji
+*** Showing emoji
 As is know, emoji are critical for developers and scientists. But really, they
 often explain a concept in a very concise manner and are incredibly useful when
 used sparingly. The font that I have chosen personally ([[https://fonts.google.com/specimen/Roboto+Mono][Roboto Mono]]) does not
@@ -155,7 +155,7 @@ described [[https://github.com/emacs-lsp/lsp-mode/issues/2291#issuecomment-81309
   (set-fontset-font t 'symbol "Symbola" nil 'append)
 #+end_src
 
-* Adding a terminal to Emacs
+** Adding a terminal to Emacs
 When programming I often find myself reaching for a terminal window to, for
 example, quickly install a package using =apt=, browsing through my current
 working directory (although I should probably do this using Emacs...), and many
@@ -177,8 +177,8 @@ Additionally we choose a global key combination to open vterm, in this case
 (global-set-key (kbd "C-`") `vterm)
 #+end_src
 
-* Visual configurations
-** Color theme
+** Visual configurations
+*** Color theme
 Of course, no editor is your own when it does not look like your own. The
 specific theme is my personal preference, so please feel free to change it to a
 theme that better suits your needs.
@@ -227,7 +227,7 @@ NOTE: Although this theme has great colors, there are some things that are not
 wel configured. Similar to the Sunburn theme above, it needs some more work to
 actually fit my preferred style, although it has some potential!
 
-** Change the startup screen
+*** Change the startup screen
 #+begin_src emacs-lisp :tangle yes
   (use-package dashboard
     :ensure t
@@ -236,7 +236,7 @@ actually fit my preferred style, although it has some potential!
   ;; Set the title
   (setq dashboard-banner-logo-title "Welcome Johannes")
   ;; Set the banner
-  (setq dashboard-startup-banner 'logo)
+  (setq dashboard-startup-banner "~/Pictures/emacs-tree-logo.png")
   ;; Center content
   ;; (setq dashboard-center-content t)
   ;; Customize widgets
@@ -245,10 +245,11 @@ actually fit my preferred style, although it has some potential!
   ;; Disable random footnote
   (setq dashboard-set-footer nil)
   ;; Set initial buffer to *dashboard* (also when opened as client)
-  (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
+  ;; (Needs some more testing as I probably just need to change workflow
+  ;; (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
 #+end_src
 
-** Change how [[https://github.com/akermu/emacs-libvterm][vterm]] is displayed when opened
+*** Change how [[https://github.com/akermu/emacs-libvterm][vterm]] is displayed when opened
 The vterm normally opens (I think?) in an already opened buffer. This is often
 unwanted as you want to use the terminal on the side while keeping your current
 active buffer open. My personal preference is to open the terminal on the bottom
@@ -262,7 +263,7 @@ active buffer open. My personal preference is to open the terminal on the bottom
                  (slot . 0)))
 #+end_src
 
-** Change the modeline
+*** Change the modeline
 The modeline in Emacs is the single-line below each buffer in a window. It can
 display important information on the opened file, such as the Git branch, the
 filename, and [[https://www.emacswiki.org/emacs/ModeLine][much more]]. While I have played around with some configurations, I
@@ -282,6 +283,21 @@ do not always clutter the modeline.
   (use-package minions
     :ensure t
     :config (minions-mode 1))
+#+end_src
+
+**** Adding Pokemon
+Some Pokemon are just cool, like Gengar. Wouldn't it be cool to have a small
+Gengar live in the modeline? Luckily for us, [[https://github.com/RyanMillerC/poke-line][poke-line]] enables exactly this
+behavior. It also adds a line/bar that shows you how far down the file you
+currently are.
+#+begin_src emacs-lisp :tangle yes
+  (use-package poke-line
+    :ensure t
+    :init
+    (poke-line-global-mode t)
+    :config
+    (setq-default poke-line-pokemon "gengar")
+    (setq-default poke-line-bar-length 10))
 #+end_src
 
 ** Change the frame title

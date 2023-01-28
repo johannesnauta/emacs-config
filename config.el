@@ -93,7 +93,7 @@
 ;; Set the title
 (setq dashboard-banner-logo-title "Welcome Johannes")
 ;; Set the banner
-(setq dashboard-startup-banner 'logo)
+(setq dashboard-startup-banner "~/Pictures/emacs-tree-logo.png")
 ;; Center content
 ;; (setq dashboard-center-content t)
 ;; Customize widgets
@@ -102,7 +102,7 @@
 ;; Disable random footnote
 (setq dashboard-set-footer nil)
 ;; Set initial buffer to *dashboard* (also when opened as client)
-(setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
+(setq initial-buffer-choice (lambda () (if (get-buffer "*dashboard*"))))
 
 (add-to-list 'display-buffer-alist
              '("\*vterm\*"
@@ -116,6 +116,14 @@
 (use-package minions
   :ensure t
   :config (minions-mode 1))
+
+(use-package poke-line
+  :ensure t
+  :init
+  (poke-line-global-mode t)
+  :config
+  (setq-default poke-line-pokemon "gengar")
+  (setq-default poke-line-bar-length 10))
 
 (setq frame-title-format '("" "[%b] - Emacs " emacs-version))
 
@@ -245,7 +253,7 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
   (setq lsp-julia-default-environment "~/.julia/environments/v1.8"))
 
 (use-package org-bullets
-  :ensure t
+      :ensure t
   :config
   (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 
@@ -328,7 +336,7 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
   (setq jedi:complete-on-dot t))
 
 (use-package ein
-  :ensure t
+      :ensure t
   :config
   (setq ein:completion-backend 'ein:use-ac-jedi-backend))
 
