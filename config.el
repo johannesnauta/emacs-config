@@ -102,7 +102,8 @@
 ;; Disable random footnote
 (setq dashboard-set-footer nil)
 ;; Set initial buffer to *dashboard* (also when opened as client)
-(setq initial-buffer-choice (lambda () (if (get-buffer "*dashboard*"))))
+;; (Needs some more testing as I probably just need to change workflow
+;; (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
 
 (add-to-list 'display-buffer-alist
              '("\*vterm\*"
@@ -315,7 +316,8 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
   (setq TeX-parse-self t)
   (setq-default TeX-master nil))
 
-(setq TeX-view-program-selection '((output-pdf "Evince")))
+(add-to-list 'TeX-view-program-selection
+             '(output-pdf "Zathura"))
 
 (add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
 

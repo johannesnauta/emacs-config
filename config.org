@@ -712,11 +712,15 @@ course. Luckily for us, there exists a PDF viewer, called [[https://pwmt.org/pro
 highly custimizable and minimalistic. Moreover, the [[https://github.com/catppuccin/catppuccin][catppuccin team]] has made
 some [[https://github.com/catppuccin/zathura][nice themes]] available for Zathura, so we use one of the themes and use
 Zathura as our main PDF-viewer.
+#+begin_src emacs-lisp :tangle yes
+  (add-to-list 'TeX-view-program-selection
+               '(output-pdf "Zathura"))
+#+end_src
 #+begin_src emacs-lisp :tangle no
   (setq TeX-view-program-selection '((output-pdf "Zathura")))
 #+end_src
 If I want Evince (e.g. when writing LaTeX beamer)
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp :tangle no
   (setq TeX-view-program-selection '((output-pdf "Evince")))
 #+end_src
 
