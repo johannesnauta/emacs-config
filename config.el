@@ -19,6 +19,8 @@
 (when (memq window-system '(mac ns x))
   (exec-path-from-shell-initialize))
 
+(setq read-process-output-max (* 1024 1024)) ;; 1mb
+
 (setq inhibit-startup-message t)  ;; Suppress startup splash screen
 (setq ring-bell-function 'ignore) ;; Suppress sound on error or EOF
 (menu-bar-mode -1)                ;; Turn off menu bar
@@ -229,7 +231,9 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
 (use-package company
   :ensure t
   :diminish company-mode
-  :hook (after-init-hook . global-company-mode))
+  :hook (after-init-hook . global-company-mode)
+  :config
+  (setq company-idle-delay 0.01))
 
 (use-package lsp-mode
   :ensure t  
@@ -254,7 +258,7 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
   (setq lsp-julia-default-environment "~/.julia/environments/v1.8"))
 
 (use-package org-bullets
-      :ensure t
+  :ensure t
   :config
   (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 
@@ -302,12 +306,20 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
        "* TODO %?\n  %i\n  %a")))
 
 (use-package org-roam
+  :ensure t
   :custom
   (org-roam-directory "~/work/notes/org-roam/")
+  (org-roam-capture-templates
+   '(("d" "default" plain
+      "%?"
+      :if-new (file+head "${slug}.org" 
+                         "#+title: ${title}\n#+author: Johannes Nauta\n#+STARTUP: indent")
+      :unnarrowed t)))
   :bind (("C-c n l" . org-roam-buffer-toggle)
          ("C-c n f" . org-roam-node-find)
-         ("C-C n i" . org-roam-node-insert))
-  :config (org-roam-setup))
+         ("C-C n i" . org-roam-node-insert))  
+  :config 
+  (org-roam-setup))
 
 (use-package tex
   :ensure auctex
@@ -338,7 +350,7 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
   (setq jedi:complete-on-dot t))
 
 (use-package ein
-      :ensure t
+  :ensure t
   :config
   (setq ein:completion-backend 'ein:use-ac-jedi-backend))
 

@@ -11,7 +11,7 @@ Welcome to my literate Emacs configuration using =org-babel=.
 + =org-babel= should already be installed when using a version of Emacs >=24 
 + Replace the contents of your =~/.emacs.d/init.el= with one line
 #+begin_src emacs-lisp
-(org-babel-load-file "~/.emacs.d/config.org")
+  (org-babel-load-file "~/.emacs.d/config.org")
 #+end_src
 + Enjoy Emacs
 
@@ -61,7 +61,12 @@ ensure that Emacs's environment variables are the same as in the shell.
   (when (memq window-system '(mac ns x))
     (exec-path-from-shell-initialize))
 #+end_src
-*** Suppressing default behaviors
+** Increase amount of data which Emacs reads from processes
+Standard Emacs read cache default size is (only) 4k, so change it here, say to 1MB.
+#+begin_src emacs-lisp :tangle yes
+  (setq read-process-output-max (* 1024 1024)) ;; 1mb
+#+end_src
+** Suppressing default behaviors
 There are some default behaviors which are just annoying, such as the startup
 splash screen or the sound on error or EOF. We can suppress some more things
 while we're at it.
@@ -500,7 +505,9 @@ function names.
   (use-package company
     :ensure t
     :diminish company-mode
-    :hook (after-init-hook . global-company-mode))
+    :hook (after-init-hook . global-company-mode)
+    :config
+    (setq company-idle-delay 0.01))
 #+end_src
 ** Language server
 When coding one wants a so-called 'IDE-like experience', in that your text
@@ -668,12 +675,23 @@ entries and put these under the heading 'Tasks' in our main task =.org= file.
 *** Org-roam configuration
 #+begin_src emacs-lisp :tangle yes
   (use-package org-roam
+    :ensure t
     :custom
     (org-roam-directory "~/work/notes/org-roam/")
+    ;; Specify default org-roam template
+    ;; See https://travisshears.com/snippets/org-roam-capture-templates/ on how
+    ;; to add more templates that you can label, e.g. with "work"
+    (org-roam-capture-templates
+     '(("d" "default" plain
+        "%?"
+        :if-new (file+head "${slug}.org" 
+                           "#+title: ${title}\n#+author: Johannes Nauta\n#+STARTUP: indent")
+        :unnarrowed t)))
     :bind (("C-c n l" . org-roam-buffer-toggle)
            ("C-c n f" . org-roam-node-find)
-           ("C-C n i" . org-roam-node-insert))
-    :config (org-roam-setup))
+           ("C-C n i" . org-roam-node-insert))  
+    :config 
+    (org-roam-setup))
 #+end_src
 
 **** TODO Use Org-roam more often, make a sensible configuration and write some supporting text on the configuration. 
