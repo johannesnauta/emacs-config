@@ -247,6 +247,8 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
   (define-key lsp-mode-map (kbd lsp-keymap-prefix) lsp-command-map)
   :hook (;; add modes
          (julia-mode . lsp-deferred)
+         (TeX-mode . lsp-deferred)
+         (LaTeX-mode . lsp-deferred)
          ;; (julia-ts-mode . lsp-deferred)
          ;; =lsp-enable-which-key-integration= gives us descriptions of what the keys
          ;; do, which helps us figure out what they do when using =lsp-mode=.
@@ -257,12 +259,20 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
   :config
   (setq lsp-julia-default-environment "~/.julia/environments/v1.8"))
 
+(use-package lsp-latex
+  :ensure t
+  :hook ((TeX-mode-hook . lsp)
+         (LaTeX-mode-hook . lsp))
+  :config
+  (setq lsp-latex-texlab-executable "/home/jnauta/.cargo/bin/texlab"))
+
 (use-package org-bullets
   :ensure t
   :config
   (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 
 (setq org-ellipsis "⤵")
+(setq org-pretty-entities t) ;; Prettify Org files by including UTF-8 characters
 
 (setq org-support-shift-select t)
 
@@ -309,6 +319,9 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
   :ensure t
   :custom
   (org-roam-directory "~/work/notes/org-roam/")
+  ;; Specify default org-roam template
+  ;; See https://travisshears.com/snippets/org-roam-capture-templates/ on how
+  ;; to add more templates that you can label, e.g. with "work"
   (org-roam-capture-templates
    '(("d" "default" plain
       "%?"
@@ -350,7 +363,7 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
   (setq jedi:complete-on-dot t))
 
 (use-package ein
-  :ensure t
+      :ensure t
   :config
   (setq ein:completion-backend 'ein:use-ac-jedi-backend))
 
@@ -381,3 +394,10 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
   (goto-char cell-end)
   (julia-repl-send-region-or-line)
   (next-line))
+
+(use-package lua-mode
+  :ensure t
+  :mode "\\.lua\\'"
+  :interpreter "lua"
+  :init
+  (add-to-list 'auto-mode-alist '("\\.lua\\'" . lua-mode)))

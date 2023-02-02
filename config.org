@@ -530,6 +530,8 @@ flexible and easy to configure and works well with popular Emacs packages like
     (define-key lsp-mode-map (kbd lsp-keymap-prefix) lsp-command-map)
     :hook (;; add modes
            (julia-mode . lsp-deferred)
+           (TeX-mode . lsp-deferred)
+           (LaTeX-mode . lsp-deferred)
            ;; (julia-ts-mode . lsp-deferred)
            ;; =lsp-enable-which-key-integration= gives us descriptions of what the keys
            ;; do, which helps us figure out what they do when using =lsp-mode=.
@@ -548,10 +550,21 @@ flexible and easy to configure and works well with popular Emacs packages like
   2. ...
 **** Julia
 #+begin_src emacs-lisp :tangle yes
-    (use-package lsp-julia
-      :ensure t
-      :config
-      (setq lsp-julia-default-environment "~/.julia/environments/v1.8"))
+  (use-package lsp-julia
+    :ensure t
+    :config
+    (setq lsp-julia-default-environment "~/.julia/environments/v1.8"))
+#+end_src
+
+**** LaTeX
+First install [[https://github.com/latex-lsp/texlab][texlab]], the LSP language server for LaTeX.
+#+begin_src emacs-lisp :tangle yes
+  (use-package lsp-latex
+    :ensure t
+    :hook ((TeX-mode-hook . lsp)
+           (LaTeX-mode-hook . lsp))
+    :config
+    (setq lsp-latex-texlab-executable "/home/jnauta/.cargo/bin/texlab"))
 #+end_src
 
 ** Org mode
@@ -563,11 +576,12 @@ them look a little bit better. The same goes for the collapsed headers, called
 the 'ellipsis'.
 #+begin_src emacs-lisp :tangle yes
   (use-package org-bullets
-  	:ensure t
+    :ensure t
     :config
     (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 
   (setq org-ellipsis "⤵")
+  (setq org-pretty-entities t) ;; Prettify Org files by including UTF-8 characters
 #+end_src
 
 Support shift selecting blocks of text as well, as described [[https://orgmode.org/manual/Conflicts.html][here]].
@@ -694,7 +708,6 @@ entries and put these under the heading 'Tasks' in our main task =.org= file.
     (org-roam-setup))
 #+end_src
 
-**** TODO Use Org-roam more often, make a sensible configuration and write some supporting text on the configuration. 
 
 ** LaTeX configuration
 LaTeX is super nice, but compiling LaTeX is not so nice. Therefore we want to
@@ -867,4 +880,16 @@ have to resort to manually downloading the relevant =elisp= files.
     (next-line))
 #+end_src
 
+** Lua configuration
+Although I do not use Lua, [[https://wezfurlong.org/wezterm/][wezterm]] (my current terminal emulator) is configured
+using a Lua file. Therefore it is just convenient to add =lua-mode= for some
+basic syntax highlighting.
+#+begin_src emacs-lisp :tangle yes
+  (use-package lua-mode
+    :ensure t
+    :mode "\\.lua\\'"
+    :interpreter "lua"
+    :init
+    (add-to-list 'auto-mode-alist '("\\.lua\\'" . lua-mode)))
+#+end_src
 
