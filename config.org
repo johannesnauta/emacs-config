@@ -414,10 +414,11 @@ background, Magit just runs your standard Git commands. However, it provides you
 with extensive flexibility when using those commands, and lets you additionally
 discover a whole set of rarely used features that Git entails.
 #+begin_src emacs-lisp :tangle yes
-  (use-package magit
-    :ensure t
-    :config
-    (setq magit-display-buffer-function 'magit-display-buffer-fullframe-status-v1))
+    (use-package magit
+      :ensure t
+      :config
+      (setq magit-display-buffer-function 'magit-display-buffer-fullframe-status-v1)
+      (setq magit-restore-window-configuration t))
 #+end_src
 *** Showing diffs and resolving conflicts with Hydra and smerge
 While conflicts can be resolved using the built-in =smerge-mode=, you normally
@@ -745,7 +746,7 @@ some [[https://github.com/catppuccin/zathura][nice themes]] available for Zathur
 Zathura as our main PDF-viewer.
 #+begin_src emacs-lisp :tangle yes
   (add-to-list 'TeX-view-program-selection
-               '(output-pdf "Zathura"))
+               '(output-pdf "Evince"))
 #+end_src
 #+begin_src emacs-lisp :tangle no
   (setq TeX-view-program-selection '((output-pdf "Zathura")))

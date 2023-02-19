@@ -174,7 +174,8 @@
 (use-package magit
   :ensure t
   :config
-  (setq magit-display-buffer-function 'magit-display-buffer-fullframe-status-v1))
+  (setq magit-display-buffer-function 'magit-display-buffer-fullframe-status-v1)
+  (setq magit-bury-buffer-function 'magit-restore-window-configuration))
 
 (use-package hydra
    :ensure t)
@@ -342,7 +343,7 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
   (setq-default TeX-master nil))
 
 (add-to-list 'TeX-view-program-selection
-             '(output-pdf "Zathura"))
+             '(output-pdf "Evince"))
 
 (add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
 
@@ -363,7 +364,7 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
   (setq jedi:complete-on-dot t))
 
 (use-package ein
-      :ensure t
+  :ensure t
   :config
   (setq ein:completion-backend 'ein:use-ac-jedi-backend))
 
