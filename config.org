@@ -418,7 +418,7 @@ discover a whole set of rarely used features that Git entails.
       :ensure t
       :config
       (setq magit-display-buffer-function 'magit-display-buffer-fullframe-status-v1)
-      (setq magit-restore-window-configuration t))
+      (setq magit-bury-buffer-function 'magit-restore-window-configuration))
 #+end_src
 *** Showing diffs and resolving conflicts with Hydra and smerge
 While conflicts can be resolved using the built-in =smerge-mode=, you normally
