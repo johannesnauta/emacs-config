@@ -1,6 +1,8 @@
 ;; Use the built-in package manager and specify archive
 (require 'package)
 (add-to-list 'package-archives
+             '("melpa" . "https://melpa.org/packages/") t)
+(add-to-list 'package-archives
              '("melpa-stable" . "https://stable.melpa.org/packages/") t)
 ;; Initialize built-in package management
 (package-initialize)
@@ -297,6 +299,7 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
   :hook (org-mode . org-fragtog-mode))
 
 (use-package citar
+  :ensure t
   :custom
   (org-cite-global-bibliography '("~/work/papers/better-bibtex/postdoc.bib"))
   (org-cite-insert-processor 'citar)
