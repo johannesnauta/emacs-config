@@ -1,7 +1,7 @@
 ;; Use the built-in package manager and specify archive
 (require 'package)
 (add-to-list 'package-archives
-             '("melpa" . "http://melpa.org/packages/") t)
+             '("melpa-stable" . "https://stable.melpa.org/packages/") t)
 ;; Initialize built-in package management
 (package-initialize)
 ;; Install use-package if not available
@@ -364,7 +364,7 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
   (setq jedi:complete-on-dot t))
 
 (use-package ein
-  :ensure t
+      :ensure t
   :config
   (setq ein:completion-backend 'ein:use-ac-jedi-backend))
 
