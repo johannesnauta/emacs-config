@@ -101,7 +101,7 @@
 ;; Center content
 ;; (setq dashboard-center-content t)
 ;; Customize widgets
-(setq dashboard-items '((recents . 5)
+(setq dashboard-items '((recents . 10)
                         (bookmarks . 5)))
 ;; Disable random footnote
 (setq dashboard-set-footer nil)
@@ -352,6 +352,12 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
 
 (add-hook 'TeX-after-compilation-finished-functions
           #'TeX-revert-document-buffer)
+
+(add-hook 'LaTeX-mode-hook
+          (lambda ()
+            (push
+             '("arara" "arara --verbose %s" TeX-run-TeX nil t
+               :help "Run arara on file") TeX-command-list)))
 
 (use-package emojify
   :hook (markdown-mode . emojify-mode))

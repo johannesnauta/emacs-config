@@ -247,7 +247,7 @@ actually fit my preferred style, although it has some potential!
   ;; Center content
   ;; (setq dashboard-center-content t)
   ;; Customize widgets
-  (setq dashboard-items '((recents . 5)
+  (setq dashboard-items '((recents . 10)
                           (bookmarks . 5)))
   ;; Disable random footnote
   (setq dashboard-set-footer nil)
@@ -747,19 +747,16 @@ course. Luckily for us, there exists a PDF viewer, called [[https://pwmt.org/pro
 highly custimizable and minimalistic. Moreover, the [[https://github.com/catppuccin/catppuccin][catppuccin team]] has made
 some [[https://github.com/catppuccin/zathura][nice themes]] available for Zathura, so we use one of the themes and use
 Zathura as our main PDF-viewer.
-#+begin_src emacs-lisp :tangle yes
-  (add-to-list 'TeX-view-program-selection
-               '(output-pdf "Evince"))
-#+end_src
 #+begin_src emacs-lisp :tangle no
   (setq TeX-view-program-selection '((output-pdf "Zathura")))
 #+end_src
 If I want Evince (e.g. when writing LaTeX beamer)
-#+begin_src emacs-lisp :tangle no
-  (setq TeX-view-program-selection '((output-pdf "Evince")))
+#+begin_src emacs-lisp :tangle yes
+  (add-to-list 'TeX-view-program-selection
+               '(output-pdf "Evince"))
 #+end_src
 
-Additionaly, when we recompile a TeX file we want the PDF viewer to see the
+Additionaly, when we recomqpile a TeX file we want the PDF viewer to see the
 updated PDF, so we 'correlate' the TeX and the PDF.
 #+begin_src emacs-lisp :tangle yes
   (add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
@@ -770,9 +767,24 @@ And update the PDF buffers after a successful LaTeX run.
   (add-hook 'TeX-after-compilation-finished-functions
             #'TeX-revert-document-buffer)
 #+end_src
+*** Using arara
+[[https://gitlab.com/islandoftex/arara][Arara]] is a TeX automation tool based on rools that are specified within the
+=.tex= documents themselves. This makes it easier to compile LaTeX documents as
+one does not need to remember command line arguments. Additionally, it is most
+likely already installed as it is included in major TeX distributions.
+While =arara= is mostly a command line tool, we can tell AucTeX to run =arara=
+on the file when compiling with =C-c C-a=.
+(Inspired by [[https://github.com/kolesarm/Emacs-configuration/blob/master/site-lisp/my-init-latex.el][this auctex config file]] and [[https://emacs.stackexchange.com/questions/9715/arara-integration-in-emacs][this stackexchange discussion]].)
+#+begin_src emacs-lisp :tangle yes
+  (add-hook 'LaTeX-mode-hook
+            (lambda ()
+              (push
+               '("arara" "arara --verbose %s" TeX-run-TeX nil t
+                 :help "Run arara on file") TeX-command-list)
+              (setq TeX-command-default "arara")))
+#+end_src
 
-Finally, we change the keybinding of the 'save-render-show' procedure when in
-LaTeX-mode.
+Finally, 
 ** Markdown configuration
 While Org mode is nice and all, I find myself reverting to Markdown in many
 cases. Most often for a =README.md= that is included in a Git repository. But it
