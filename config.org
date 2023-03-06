@@ -491,7 +491,7 @@ file:snippets/ directory.
   (use-package yasnippet
     :ensure t
     :diminish yas-minor-mode
-    :config (yas-global-mode))
+    :hook (prog-mode . yas-minor-mode))
   (use-package yasnippet-snippets
     :after yasnippet
     :ensure t
@@ -555,6 +555,7 @@ flexible and easy to configure and works well with popular Emacs packages like
 #+begin_src emacs-lisp :tangle yes
   (use-package lsp-julia
     :ensure t
+    :mode "\\.jl\\'"
     :config
     (setq lsp-julia-default-environment "~/.julia/environments/v1.8"))
 #+end_src
@@ -724,11 +725,18 @@ configuration is built on top of [[https://www.gnu.org/software/auctex/][AUCTeX]
 writing an formatting TeX files in Emacs. 
 #+begin_src emacs-lisp :tangle yes
   (use-package tex
+    :defer t
     :ensure auctex
     :config
     (setq TeX-auto-save t)
     (setq TeX-parse-self t)
-    (setq-default TeX-master nil))
+    (setq TeX-master nil)
+    ;; Add Evince as default (see below)
+    (add-to-list 'TeX-view-program-selection '(output-pdf "Evince"))
+    ;; Add hooks (see below)
+    :hook ((LaTeX-mode-hook . TeX-source-correlate-mode)
+           (TeX-after-compilation-finished-functions . TeX-rever-document-buffer))
+  )
 #+end_src
 While there exist some pdf tools that can display the rendered PDF in an Emacs
 window and provide Emacs functionality (such as [[https://www.emacswiki.org/emacs/IncrementalSearch][isearch]]), the viewers convert
@@ -751,19 +759,19 @@ Zathura as our main PDF-viewer.
   (setq TeX-view-program-selection '((output-pdf "Zathura")))
 #+end_src
 If I want Evince (e.g. when writing LaTeX beamer)
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp :tangle no
   (add-to-list 'TeX-view-program-selection
                '(output-pdf "Evince"))
 #+end_src
 
 Additionaly, when we recomqpile a TeX file we want the PDF viewer to see the
 updated PDF, so we 'correlate' the TeX and the PDF.
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp :tangle no
   (add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
 #+end_src
 
 And update the PDF buffers after a successful LaTeX run.
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp :tangle no
   (add-hook 'TeX-after-compilation-finished-functions
             #'TeX-revert-document-buffer)
 #+end_src
@@ -877,6 +885,8 @@ have to resort to manually downloading the relevant =elisp= files.
     :config
     ;; Set the terminal backend
     (julia-repl-set-terminal-backend 'vterm)
+    ;; Set the number of threads
+    (setenv "JULIA_NUM_THREADS" "4")
 
     ;; Keybindings for quickly sending code to the REPL
     (define-key julia-repl-mode-map (kbd "<M-RET>") 'my/julia-repl-send-cell))

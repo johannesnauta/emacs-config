@@ -225,7 +225,7 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
 (use-package yasnippet
   :ensure t
   :diminish yas-minor-mode
-  :config (yas-global-mode))
+  :hook (prog-mode . yas-minor-mode))
 (use-package yasnippet-snippets
   :after yasnippet
   :ensure t
@@ -259,6 +259,7 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
 
 (use-package lsp-julia
   :ensure t
+  :mode "\\.jl\\'"
   :config
   (setq lsp-julia-default-environment "~/.julia/environments/v1.8"))
 
@@ -339,25 +340,25 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
   (org-roam-setup))
 
 (use-package tex
+  :defer t
   :ensure auctex
   :config
   (setq TeX-auto-save t)
   (setq TeX-parse-self t)
-  (setq-default TeX-master nil))
-
-(add-to-list 'TeX-view-program-selection
-             '(output-pdf "Evince"))
-
-(add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
-
-(add-hook 'TeX-after-compilation-finished-functions
-          #'TeX-revert-document-buffer)
+  (setq TeX-master nil)
+  ;; Add Evince as default (see below)
+  (add-to-list 'TeX-view-program-selection '(output-pdf "Evince"))
+  ;; Add hooks (see below)
+  :hook ((LaTeX-mode-hook . TeX-source-correlate-mode)
+         (TeX-after-compilation-finished-functions . TeX-rever-document-buffer))
+)
 
 (add-hook 'LaTeX-mode-hook
           (lambda ()
             (push
              '("arara" "arara --verbose %s" TeX-run-TeX nil t
-               :help "Run arara on file") TeX-command-list)))
+               :help "Run arara on file") TeX-command-list)
+            (setq TeX-command-default "arara")))
 
 (use-package emojify
   :hook (markdown-mode . emojify-mode))
@@ -389,6 +390,8 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
   :config
   ;; Set the terminal backend
   (julia-repl-set-terminal-backend 'vterm)
+  ;; Set the number of threads
+  (setenv "JULIA_NUM_THREADS" "4")
 
   ;; Keybindings for quickly sending code to the REPL
   (define-key julia-repl-mode-map (kbd "<M-RET>") 'my/julia-repl-send-cell))
