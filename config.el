@@ -233,41 +233,18 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
 
 (use-package company
   :ensure t
-  :diminish company-mode
-  :hook (after-init-hook . global-company-mode)
+  :after eglot
+  :hook (eglot-managed-mode . company-mode)
   :config
   (setq company-idle-delay 0.01))
 
-(use-package lsp-mode
-  :ensure t  
-  :commands (lsp lsp-deferred)
-  :init
-  ;; Usually the =lsp-keymap-prefix= is bound to "C-c l", but this is already
-  ;; bound to the (very useful!) =org-store-link=, which we do not want to
-  ;; override. "C-c o" ('o' for option) was empty, so use it here.
-  (setq lsp-keymap-prefix "C-c o")
-  :config
-  (define-key lsp-mode-map (kbd lsp-keymap-prefix) lsp-command-map)
-  :hook (;; add modes
-         (julia-mode . lsp-deferred)
-         (TeX-mode . lsp-deferred)
-         (LaTeX-mode . lsp-deferred)
-         ;; (julia-ts-mode . lsp-deferred)
-         ;; =lsp-enable-which-key-integration= gives us descriptions of what the keys
-         ;; do, which helps us figure out what they do when using =lsp-mode=.
-         (lsp-mode . lsp-enable-which-key-integration)))
-
-(use-package lsp-julia
+(use-package eglot
   :ensure t
   :config
-  (setq lsp-julia-default-environment "~/.julia/environments/v1.8"))
+  (setq eglot-autoshutdown t))
 
-(use-package lsp-latex
-  :ensure t
-  :hook ((TeX-mode-hook . lsp)
-         (LaTeX-mode-hook . lsp))
-  :config
-  (setq lsp-latex-texlab-executable "/home/jnauta/.cargo/bin/texlab"))
+(use-package eglot-jl
+  :ensure t)
 
 (use-package org-bullets
   :ensure t
@@ -379,8 +356,12 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
 
 (use-package julia-mode
   :ensure t
-  ;; Specify the hook that connects =lsp-mode=
-  :hook (julia-mode-hook . lsp-mode))
+  :mode "\\.jl\\'"
+  :interpreter "julia"
+  :config
+  (eglot-jl-init)
+  ;; Specify the hook that connects =eglot=
+  :hook (julia-mode . eglot-ensure))
 
 (use-package julia-repl
   :ensure t
@@ -390,7 +371,6 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
   (julia-repl-set-terminal-backend 'vterm)
   ;; Set the number of threads
   (setenv "JULIA_NUM_THREADS" "4")
-
   ;; Keybindings for quickly sending code to the REPL
   (define-key julia-repl-mode-map (kbd "<M-RET>") 'my/julia-repl-send-cell))
 

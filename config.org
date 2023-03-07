@@ -507,8 +507,8 @@ function names.
 #+begin_src emacs-lisp :tangle yes
   (use-package company
     :ensure t
-    :diminish company-mode
-    :hook (after-init-hook . global-company-mode)
+    :after eglot
+    :hook (eglot-managed-mode . company-mode)
     :config
     (setq company-idle-delay 0.01))
 #+end_src
@@ -516,11 +516,25 @@ function names.
 When coding one wants a so-called 'IDE-like experience', in that your text
 editor recognizes previously defined function for autocompletion, displays
 documentation of functions, checks syntax errors, etc. Emacs provides these
+features with, for now, =lsp-mode= and =eglot=. As =eglot= will be in Emacs's
+core from version 29 onwards, and as =lsp-mode= has some not-easy-to-solve
+issues with =Julia='s =Pkg= environments, I am now choosing =eglot= as my main
+LSP driver.
+#+begin_src emacs-lisp :tangle yes
+  (use-package eglot
+    :ensure t
+    :config
+    (setq eglot-autoshutdown t))
+#+end_src
+** LSP
+When coding one wants a so-called 'IDE-like experience', in that your text
+editor recognizes previously defined function for autocompletion, displays
+documentation of functions, checks syntax errors, etc. Emacs provides these
 features using =lsp-mode=; a mode that supports *all* language features defined
 in the Language Server Protocol (LSP). As always, Emacs' =lsp-mode= is highly
 flexible and easy to configure and works well with popular Emacs packages like
 =company=, =flycheck= and =projectile=.
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp :tangle no
   (use-package lsp-mode
     :ensure t  
     :commands (lsp lsp-deferred)
@@ -553,6 +567,10 @@ flexible and easy to configure and works well with popular Emacs packages like
   2. ...
 **** Julia
 #+begin_src emacs-lisp :tangle yes
+  (use-package eglot-jl
+    :ensure t)
+#+end_src
+#+begin_src emacs-lisp :tangle no
   (use-package lsp-julia
     :ensure t
     :config
@@ -561,7 +579,7 @@ flexible and easy to configure and works well with popular Emacs packages like
 
 **** LaTeX
 First install [[https://github.com/latex-lsp/texlab][texlab]], the LSP language server for LaTeX.
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp :tangle no
   (use-package lsp-latex
     :ensure t
     :hook ((TeX-mode-hook . lsp)
@@ -859,8 +877,12 @@ tools (for Emacs). The most important one is [[https://github.com/JuliaEditorSup
 #+begin_src emacs-lisp :tangle yes
   (use-package julia-mode
     :ensure t
-    ;; Specify the hook that connects =lsp-mode=
-    :hook (julia-mode-hook . lsp-mode))
+    :mode "\\.jl\\'"
+    :interpreter "julia"
+    :config
+    (eglot-jl-init)
+    ;; Specify the hook that connects =eglot=
+    :hook (julia-mode . eglot-ensure))
 #+end_src
 Note: =julia-mode= does not highlight syntax very well. There is some work in
 progress on integrating treesitter with Julia, but this is still rudimentary an
@@ -885,7 +907,6 @@ have to resort to manually downloading the relevant =elisp= files.
     (julia-repl-set-terminal-backend 'vterm)
     ;; Set the number of threads
     (setenv "JULIA_NUM_THREADS" "4")
-
     ;; Keybindings for quickly sending code to the REPL
     (define-key julia-repl-mode-map (kbd "<M-RET>") 'my/julia-repl-send-cell))
 #+end_src
