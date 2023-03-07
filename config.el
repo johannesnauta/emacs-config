@@ -97,7 +97,7 @@
 ;; Set the title
 (setq dashboard-banner-logo-title "Welcome Johannes")
 ;; Set the banner
-(setq dashboard-startup-banner "~/Pictures/emacs-tree-logo.png")
+(setq dashboard-startup-banner "~/.emacs.d/themes/banners/emacs.txt")
 ;; Center content
 ;; (setq dashboard-center-content t)
 ;; Customize widgets
@@ -259,7 +259,6 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
 
 (use-package lsp-julia
   :ensure t
-  :mode "\\.jl\\'"
   :config
   (setq lsp-julia-default-environment "~/.julia/environments/v1.8"))
 
@@ -385,8 +384,7 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
 
 (use-package julia-repl
   :ensure t
-  :hook (julia-ts-mode . julia-repl-mode)
-
+  :hook (julia-mode . julia-repl-mode)
   :config
   ;; Set the terminal backend
   (julia-repl-set-terminal-backend 'vterm)
