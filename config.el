@@ -296,6 +296,9 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
     '(("t" "Todo" entry (file+headline "~/work/tasks/org/todo.org" "Tasks")
        "* TODO %?\n  %i\n  %a")))
 
+(use-package ox-pandoc
+  :ensure t)
+
 (use-package org-roam
   :ensure t
   :custom
@@ -337,7 +340,11 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
             (setq TeX-command-default "arara")))
 
 (use-package emojify
+  :ensure t
   :hook (markdown-mode . emojify-mode))
+
+(use-package vmd-mode
+  :ensure t)
 
 (add-hook 'python-mode-hook
       (lambda ()

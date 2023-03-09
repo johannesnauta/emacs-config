@@ -708,6 +708,15 @@ entries and put these under the heading 'Tasks' in our main task =.org= file.
          "* TODO %?\n  %i\n  %a")))
 #+end_src
 
+**** Using Pandoc to convert Org files to other formats
+While Org files can be exported to other formats using the default Org mode
+implementation, it is often much better to use Pandoc to convert between
+different formats. In order to achieve this we use [[https://github.com/kawabata/ox-pandoc][=ox-pandoc=]].
+#+begin_src emacs-lisp :tangle yes
+  (use-package ox-pandoc
+    :ensure t)
+#+end_src
+
 *** Org-roam configuration
 #+begin_src emacs-lisp :tangle yes
   (use-package org-roam
@@ -814,12 +823,33 @@ Finally,
 While Org mode is nice and all, I find myself reverting to Markdown in many
 cases. Most often for a =README.md= that is included in a Git repository. But it
 is nice to know that Org does support conversion to Markdown!
+NOTE: It is actually highly preferred to let Pandoc handle the conversion from
+Org to Markdown ([[*Using Pandoc to convert Org files to other formats][see here for the config relatex to =ox-pandoc=]]).
+
 Currently, as Markdown is a super simple (and therefore useful!) text format,
-the only thing I find myself using non-default behaviors is my preference of
+one thing I find myself wanting outside the non-default behaviors is my preference of
 displaying emojis -- so enable that here.
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp :tangle no
   (use-package emojify
+    :ensure t
     :hook (markdown-mode . emojify-mode))
+#+end_src
+Further, when writing Markdown for Git repositories, it is useful to preview the
+Markdown live, so use =markdown-mode-preview=
+#+begin_src emacs-lisp :tangle no
+  (use-package markdown-mode
+    :ensure t
+    :mode ("\\.md\\'" . gfm-mode)
+    :init (setq markdown-command "pandoc"))
+  (use-package markdown-preview-mode
+    :after markdown-mode
+    :hook ((markdown-mode . markdown-preview-mode)
+           (gfm-mode . markdown-preview-mode)))
+#+end_src
+
+#+begin_src emacs-lisp :tangle no
+  (use-package vmd-mode
+    :ensure t)
 #+end_src
 
 ** Python configuration
