@@ -490,8 +490,8 @@ file:snippets/ directory.
 #+begin_src emacs-lisp :tangle yes
   (use-package yasnippet
     :ensure t
-    :diminish yas-minor-mode
-    :hook (prog-mode . yas-minor-mode))
+    :hook ((prog-mode . yas-minor-mode)
+           (LaTeX-mode-hook . yas-minor-mode)))
   (use-package yasnippet-snippets
     :after yasnippet
     :ensure t
@@ -508,7 +508,7 @@ function names.
   (use-package company
     :ensure t
     :after eglot
-    :hook (eglot-managed-mode . company-mode)
+    :hook ((eglot-managed-mode . company-mode))
     :config
     (setq company-idle-delay 0.01))
 #+end_src
@@ -524,7 +524,8 @@ LSP driver.
   (use-package eglot
     :ensure t
     :config
-    (setq eglot-autoshutdown t))
+    (setq eglot-autoshutdown t)
+    (setq eldoc-echo-area-use-multiline-p nil))
 #+end_src
 ** LSP
 When coding one wants a so-called 'IDE-like experience', in that your text
@@ -751,18 +752,23 @@ configuration is built on top of [[https://www.gnu.org/software/auctex/][AUCTeX]
 writing an formatting TeX files in Emacs. 
 #+begin_src emacs-lisp :tangle yes
   (use-package tex
-    :defer t
     :ensure auctex
     :config
     (setq TeX-auto-save t)
     (setq TeX-parse-self t)
     (setq TeX-master nil)
+    (setq font-latex-fontify-script nil)  ;; Disable fontification, e.g. \section
+    (setq reftex-plug-into-AUCTeX t)
+    (setq reftex-bibliography-commands '("bibliography" "nobibliography" "addbibresource"))
     ;; Add Evince as default (see below)
-    (add-to-list 'TeX-view-program-selection '(output-pdf "Evince"))
-    ;; Add hooks (see below)
-    :hook ((LaTeX-mode-hook . TeX-source-correlate-mode)
-           (TeX-after-compilation-finished-functions . TeX-rever-document-buffer))
-  )
+    ;; (add-to-list 'TeX-view-program-selection '(output-pdf "Evince"))
+    ;; Add Zathura as default (see below)
+    (add-to-list 'TeX-view-program-selection '(output-pdf "Zathura"))
+    ;; Add hooks
+    :hook ((LaTeX-mode . turn-on-reftex)              ;; Turn on RefTeX
+           (LaTeX-mode . eglot-ensure)                ;; Turn on eglot (LSP)
+           (LaTeX-mode . TeX-source-correlate-mode)   ;; Correlated PDF and tex file       
+           (TeX-after-compilation-finished-functions . TeX-revert-document-buffer)))
 #+end_src
 While there exist some pdf tools that can display the rendered PDF in an Emacs
 window and provide Emacs functionality (such as [[https://www.emacswiki.org/emacs/IncrementalSearch][isearch]]), the viewers convert
