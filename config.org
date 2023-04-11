@@ -491,7 +491,7 @@ file:snippets/ directory.
   (use-package yasnippet
     :ensure t
     :hook ((prog-mode . yas-minor-mode)
-           (LaTeX-mode-hook . yas-minor-mode)))
+           (LaTeX-mode . yas-minor-mode)))
   (use-package yasnippet-snippets
     :after yasnippet
     :ensure t
@@ -525,7 +525,10 @@ LSP driver.
     :ensure t
     :config
     (setq eglot-autoshutdown t)
-    (setq eldoc-echo-area-use-multiline-p nil))
+    (setq eldoc-echo-area-use-multiline-p nil)
+    (put 'eglot-note 'flymake-overlay-control nil)
+    (put 'eglot-warning 'flymake-overlay-control nil)
+    (put 'eglot-error 'flymake-overlay-control nil))
 #+end_src
 ** LSP
 When coding one wants a so-called 'IDE-like experience', in that your text
@@ -650,6 +653,12 @@ with them.
   (global-set-key (kbd "C-c c") #'org-capture)
 #+end_src
 
+*** Org agenda
+#+begin_src emacs-lisp :tangle yes
+  (setq org-agenda-files (list "~/work/tasks/org/todo.org"
+                               "~/personal/tasks/org/todo.org"))
+#+end_src
+
 *** Org-mode configuration
 **** LaTeX preview
 Within Org files we can preview LaTeX fragments by compiling them and overlaying
@@ -757,7 +766,7 @@ writing an formatting TeX files in Emacs.
     (setq TeX-auto-save t)
     (setq TeX-parse-self t)
     (setq TeX-master nil)
-    (setq font-latex-fontify-script nil)  ;; Disable fontification, e.g. \section
+    (setq font-latex-fontify-sectioning 'color)  ;; Disable fontification, e.g. \section
     (setq reftex-plug-into-AUCTeX t)
     (setq reftex-bibliography-commands '("bibliography" "nobibliography" "addbibresource"))
     ;; Add Evince as default (see below)
@@ -875,6 +884,7 @@ enables a small pop-up screen that shows information about a function or class,
 code location, and more.
 #+begin_src emacs-lisp :tangle yes
   (use-package jedi
+    :ensure t
     :hook (python-mode . jedi:setup)
     (setq jedi:complete-on-dot t))
 #+end_src
