@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: julia-module
+# key: <mod
+# --
+
+#/ Start module
+module ${1:name of module}
+$0
+end # module $1
+#/ End module
