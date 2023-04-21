@@ -247,8 +247,9 @@ actually fit my preferred style, although it has some potential!
   ;; Center content
   ;; (setq dashboard-center-content t)
   ;; Customize widgets
-  (setq dashboard-items '((recents . 10)
-                          (bookmarks . 5)))
+  (setq dashboard-items '((recents . 6)
+                          (bookmarks . 5)
+                          (agenda . 5)))
   ;; Disable random footnote
   (setq dashboard-set-footer nil)
   ;; Set initial buffer to *dashboard* (also when opened as client)
@@ -626,6 +627,19 @@ and date when logging TODO's.
   (setq org-log-done t)
 #+end_src
 
+Define new [[https://orgmode.org/manual/Workflow-states.html][TODO keywords as workflow states]], and [[https://orgmode.org/manual/Fast-access-to-TODO-states.html][assign keys for single-letter access.]]
+#+begin_src emacs-lisp :tangle yes
+  (setq org-todo-keywords
+        '((sequence "TODO(t)" "IN PROGRESS(p)" "|" "DONE(d)" "CANCELED(c)")))
+#+end_src
+Set their colors.
+#+begin_src emacs-lisp :tangle yes
+  (setq org-todo-keyword-faces
+        '(("TODO" . "goldenrod3")
+          ("IN PROGRESS" . "mediumseagreen")
+          ("CANCELED" . org-warning)))
+#+end_src
+
 It is inconvenient to have to =M-x auto-fill-mode= every time you open an Org
 file. However, line wrapping (not only visually line wrapping, as when using
 =visual-line-mode-) is basically a must. Therefore, we add a hook that enables
@@ -952,7 +966,7 @@ have to resort to manually downloading the relevant =elisp= files.
     ;; Set the terminal backend
     (julia-repl-set-terminal-backend 'vterm)
     ;; Set the number of threads
-    (setenv "JULIA_NUM_THREADS" "4")
+    (setenv "JULIA_NUM_THREADS" "8")
     ;; Keybindings for quickly sending code to the REPL
     (define-key julia-repl-mode-map (kbd "<M-RET>") 'my/julia-repl-send-cell))
 #+end_src
