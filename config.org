@@ -244,18 +244,16 @@ actually fit my preferred style, although it has some potential!
     (setq dashboard-banner-logo-title "Welcome Johannes")
     ;; Set the banner
     (setq dashboard-startup-banner "~/.emacs.d/themes/banners/ancient-erdtree.png")
-  ;; (setq dashboard-startup-banner "~/.emacs.d/themes/banners/emacs.txt")
-  ;; Center content
-  ;; (setq dashboard-center-content t)
-  ;; Customize widgets
-  (setq dashboard-items '((recents . 6)
-                          (bookmarks . 5)
-                          (agenda . 5)))
-  ;; Disable random footnote
-  (setq dashboard-set-footer nil)
-  ;; Set initial buffer to *dashboard* (also when opened as client)
-  ;; (Needs some more testing as I probably just need to change workflow
-  ;; (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
+    ;; Customize widgets
+    (setq dashboard-items '((recents . 6)
+                            (bookmarks . 5)
+                            (agenda . 5)))
+    ;; Disable random footnote
+    (setq dashboard-set-footer nil)
+    ;; Set initial buffer to *dashboard* (also when opened as client)
+    ;; (Needs some more testing as I probably just need to change workflow
+    ;; (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
+  )
 #+end_src
 
 *** Change how [[https://github.com/akermu/emacs-libvterm][vterm]] is displayed when opened

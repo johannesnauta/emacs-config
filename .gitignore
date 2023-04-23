@@ -67,3 +67,6 @@ history
 # bookmarks
 bookmarks
 config.el
+/transient/
+/recentf
+/.lsp-session-v1
