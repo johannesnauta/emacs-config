@@ -27,18 +27,20 @@ out of Emacs when you let =use-package= do all the configuration when possible.
 First we need to use the built-in package manager to actually download
 =use-package= when it is not available.
 #+begin_src emacs-lisp :tangle yes
-  ;; Use the built-in package manager and specify archive
-  (require 'package)
-  (add-to-list 'package-archives
-               '("melpa" . "https://melpa.org/packages/") t)
-  (add-to-list 'package-archives
-               '("melpa-stable" . "https://stable.melpa.org/packages/") t)
-  ;; Initialize built-in package management
-  (package-initialize)
-  ;; Install use-package if not available
-  (unless (package-installed-p 'use-package)
-    (package-refresh-contents)
-    (package-install 'use-package))
+    ;; Use the built-in package manager and specify archive
+    (require 'package)
+    (add-to-list 'package-archives
+                 '("melpa" . "https://melpa.org/packages/") t)
+    (add-to-list 'package-archives
+                 '("elpa" . "https://elpa.org/packages/") t)
+    (add-to-list 'package-archives
+                 '("melpa-stable" . "https://stable.melpa.org/packages/") t)
+    ;; Initialize built-in package management
+    (package-initialize)
+    ;; Install use-package if not available
+    (unless (package-installed-p 'use-package)
+      (package-refresh-contents)
+      (package-install 'use-package))
 #+end_src
 
 Then we can actually load =use-package=
@@ -973,7 +975,7 @@ have to resort to manually downloading the relevant =elisp= files.
 
 #+begin_src emacs-lisp :tangle yes
   (defun my/julia-repl-send-cell() 
-    ;; "Send the current julia cell (delimited by ###) to the julia shell"
+    ;; "Send the current julia cell (delimited by #/) to the julia shell"
     (interactive)
     (save-excursion
       (setq cell-begin (if (re-search-backward "^#/" nil t) (point) (point-min))))
