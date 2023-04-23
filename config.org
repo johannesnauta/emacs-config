@@ -32,8 +32,6 @@ First we need to use the built-in package manager to actually download
     (add-to-list 'package-archives
                  '("melpa" . "https://melpa.org/packages/") t)
     (add-to-list 'package-archives
-                 '("elpa" . "https://elpa.org/packages/") t)
-    (add-to-list 'package-archives
                  '("melpa-stable" . "https://stable.melpa.org/packages/") t)
     ;; Initialize built-in package management
     (package-initialize)
@@ -241,11 +239,12 @@ actually fit my preferred style, although it has some potential!
   (use-package dashboard
     :ensure t
     :config
-    (dashboard-setup-startup-hook))
-  ;; Set the title
-  (setq dashboard-banner-logo-title "Welcome Johannes")
-  ;; Set the banner
-  (setq dashboard-startup-banner "~/.emacs.d/themes/banners/emacs.txt")
+    (dashboard-setup-startup-hook)
+    ;; Set the title
+    (setq dashboard-banner-logo-title "Welcome Johannes")
+    ;; Set the banner
+    (setq dashboard-startup-banner "~/.emacs.d/themes/banners/ancient-erdtree.png")
+  ;; (setq dashboard-startup-banner "~/.emacs.d/themes/banners/emacs.txt")
   ;; Center content
   ;; (setq dashboard-center-content t)
   ;; Customize widgets
