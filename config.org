@@ -82,7 +82,7 @@ while we're at it.
   (electric-indent-mode -1)         ;; Turn off indentation in files
 #+end_src
 
-*** Enabling default behaviors
+** Enabling default behaviors
 In contrast, some behavior is not turned on by default, so we do that here
 #+begin_src emacs-lisp :tangle yes
   (global-display-line-numbers-mode 1)	;; Display line numbers in every buffer
@@ -94,18 +94,28 @@ In contrast, some behavior is not turned on by default, so we do that here
   (setq recentf-max-saved-items 25)
 #+end_src
 
-*** Specifying other defaults
+*** Emacs Server
+#+begin_src emacs-lisp :tangle yes
+  (server-start)
+#+end_src
+
+** Specifying other defaults
 Finally, there are some defaults that are sensible to set, such as the TAB
 width, among others. You can define other global keybindings here as well, as
 long as these are not originating from a package that is handled by
 =use-package=. These should be handled by =use-package= itself when loaded.
+The font is set here as well. Note that the font needs to be installed
+seperately in the distro of choice. After installing, simply select the desired
+font. I change the height a bit as I find the default hight to be slighly too
+large. 
 #+begin_src emacs-lisp :tangle yes
   (setq-default indent-tabs-mode nil)						;; Spaces instead of tabs
   (setq-default tab-width 2)			              ;; Default tab width
   (setq-default fill-column 80)                 ;; Default column width
   (setq indent-line-function 'insert-tab)       ;; Indent current line(s) according to current major mode
   ;; Font and font size
-  (set-face-attribute 'default nil :family "Roboto Mono Medium" :height 115)
+  ;; (set-face-attribute 'default nil :family "Roboto Mono Medium" :height 115)
+  (set-face-attribute 'default nil :family "Iosevka" :height 115)
 #+end_src
 
 **** Global keybindings unrelated to =use-package=
@@ -247,7 +257,7 @@ actually fit my preferred style, although it has some potential!
     ;; Customize widgets
     (setq dashboard-items '((recents . 6)
                             (bookmarks . 5)
-                            (agenda . 5)))
+                            (agenda . 10)))
     ;; Disable random footnote
     (setq dashboard-set-footer nil)
     ;; Set initial buffer to *dashboard* (also when opened as client)
@@ -510,7 +520,8 @@ function names.
     :after eglot
     :hook ((eglot-managed-mode . company-mode))
     :config
-    (setq company-idle-delay 0.01))
+    (setq company-idle-delay 0.01)
+    (setq company-minimum-prefix-length 2))
 #+end_src
 ** Language server
 When coding one wants a so-called 'IDE-like experience', in that your text
