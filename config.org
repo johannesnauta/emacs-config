@@ -115,7 +115,8 @@ large.
   (setq indent-line-function 'insert-tab)       ;; Indent current line(s) according to current major mode
   ;; Font and font size
   ;; (set-face-attribute 'default nil :family "Roboto Mono Medium" :height 115)
-  (set-face-attribute 'default nil :family "Iosevka" :height 115)
+  ;; (set-face-attribute 'default nil :family "Iosevka" :height 115)
+  (set-face-attribute 'default nil :family "Fira Code" :height 115)
 #+end_src
 
 **** Global keybindings unrelated to =use-package=
@@ -194,6 +195,21 @@ Additionally we choose a global key combination to open vterm, in this case
 (global-set-key (kbd "C-`") `vterm)
 #+end_src
 
+*** Change how [[https://github.com/akermu/emacs-libvterm][vterm]] is displayed when opened
+The vterm normally opens (I think?) in an already opened buffer. This is often
+unwanted as you want to use the terminal on the side while keeping your current
+active buffer open. My personal preference is to open the terminal on the bottom
+-- mainly because I am used to that from my VSCode days. You can always open it
+in the current wind
+#+begin_src emacs-lisp :tangle yes
+  (add-to-list 'display-buffer-alist
+               '("\*vterm\*"
+                 (display-buffer-in-side-window)
+                 (window-height . 0.275)         ;; Specify fraction of window height
+                 (side . bottom)
+                 (slot . 0)))
+#+end_src
+
 ** Visual configurations
 *** Color theme
 Of course, no editor is your own when it does not look like your own. The
@@ -241,7 +257,7 @@ Catppuccin also has a nice range of pastel colors in four different 'flavors'.
   (catppuccin-reload)
 #+end_src
 NOTE: Although this theme has great colors, there are some things that are not
-wel configured. Similar to the Sunburn theme above, it needs some more work to
+well configured. Similar to the Sunburn theme above, it needs some more work to
 actually fit my preferred style, although it has some potential!
 
 *** Change the startup screen
@@ -256,7 +272,8 @@ actually fit my preferred style, although it has some potential!
     (setq dashboard-startup-banner "~/.emacs.d/themes/banners/ancient-erdtree.png")
     ;; Customize widgets
     (setq dashboard-items '((recents . 6)
-                            (bookmarks . 5)
+                            (bookmarks . 5)                            
+                            (projects . 5)
                             (agenda . 10)))
     ;; Disable random footnote
     (setq dashboard-set-footer nil)
@@ -264,20 +281,6 @@ actually fit my preferred style, although it has some potential!
     ;; (Needs some more testing as I probably just need to change workflow
     ;; (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
   )
-#+end_src
-
-*** Change how [[https://github.com/akermu/emacs-libvterm][vterm]] is displayed when opened
-The vterm normally opens (I think?) in an already opened buffer. This is often
-unwanted as you want to use the terminal on the side while keeping your current
-active buffer open. My personal preference is to open the terminal on the bottom
--- mainly because I am used to that from my VSCode days.
-#+begin_src emacs-lisp :tangle yes
-  (add-to-list 'display-buffer-alist
-               '("\*vterm\*"
-                 (display-buffer-in-side-window)
-                 (window-height . 0.275)         ;; Specify fraction of window height
-                 (side . bottom)
-                 (slot . 0)))
 #+end_src
 
 *** Change the modeline
@@ -486,6 +489,22 @@ necessity.
     :hook (magit-diff-visit-file . (lambda ()
                                      (when smerge-mode
                                        (smerge-hydra/body)))))
+#+end_src
+
+** Managing projects with Projectile.el
+[[https://github.com/bbatsov/projectile][Projectile.el]] is a project interaction library. It basically provides a lot of
+features operating on the project level, such as opening and closing (all
+buffers associated with) a project, find references in the project, and more. It
+integrates with the built-in [[https://github.com/emacs-mirror/emacs/blob/master/lisp/progmodes/project.el][project.el]].
+#+begin_src emacs-lisp :tangle yes
+  (use-package projectile
+    :ensure t
+    :pin melpa-stable
+    :init
+    (projectile-mode +1)
+    :bind (:map projectile-mode-map
+                ("s-p" . projectile-command-map)
+                ("C-c p" . projectile-command-map)))
 #+end_src
 
 * Emacs YASnippets
@@ -781,15 +800,16 @@ course includes heavy use of [[YASnippets]] (e.g. for =\align= environments), bu
 also includes quick (re-)compiling of =.tex= files, building a bibliography,
 etc. Working with LaTeX and (external) PDF viewers could be a chapter on its
 own, but most of the keybindings provides below speak for themselves. The
-configuration is built on top of [[https://www.gnu.org/software/auctex/][AUCTeX]], which is an extensible package for
+configuration is built on top of [[https://www.gnu.org/software/auctex
+/][AUCTeX]], which is an extensible package for
 writing an formatting TeX files in Emacs. 
 #+begin_src emacs-lisp :tangle yes
   (use-package tex
     :ensure auctex
     :config
-    (setq TeX-auto-save t)
-    (setq TeX-parse-self t)
-    (setq TeX-master nil)
+    (setq-default TeX-master nil)
+    (setq TeX-auto-save t
+          TeX-parse-self t)
     (setq font-latex-fontify-sectioning 'color)  ;; Disable fontification, e.g. \section
     (setq reftex-plug-into-AUCTeX t)
     (setq reftex-bibliography-commands '("bibliography" "nobibliography" "addbibresource"))
