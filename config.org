@@ -80,6 +80,7 @@ while we're at it.
   (setq scroll-conservatively 100)  ;; Make scrolling better
   (show-paren-mode 1)               ;; Highlight matching parentheses
   (electric-indent-mode -1)         ;; Turn off indentation in files
+  (setq native-comp-async-report-warnings-errors nil)
 #+end_src
 
 ** Enabling default behaviors
@@ -92,6 +93,17 @@ In contrast, some behavior is not turned on by default, so we do that here
   (recentf-mode 1)
   (setq recentf-max-menu-items 25)
   (setq recentf-max-saved-items 25)
+#+end_src
+
+** Enabling 'fuzzy' search
+Emacs' isearch is strict, as in, it only finds exact hits. But ideally we would
+always like to fuzzy search. While there are some packages available, they are
+often not well maintained (anymore). However, a super simple 'hack' that enables
+similar-feeling behavior is to simply insert some regex when entering a space,
+so that you can use queries as ="fun get"= and it will find entries such as
+="function get_data"=, or something similar.
+#+begin_src emacs-lisp :tangle yes
+  (setq search-whitespace-regexp ".*?")
 #+end_src
 
 *** Emacs Server
@@ -186,7 +198,9 @@ it provides the most complete terminal experience. Do note that it is still in
   (use-package vterm
     :ensure t
     :init
-    (setq vterm-timer-delay 0.01))
+    (setq vterm-timer-delay 0.01)
+    :config
+    (setq vterm-max-scrollback 2048))
 #+end_src
 Afterwards you might want to [[https://github.com/akermu/emacs-libvterm#shell-side-configuration][configure the shell]] as well.
 Additionally we choose a global key combination to open vterm, in this case
@@ -271,10 +285,10 @@ actually fit my preferred style, although it has some potential!
     ;; Set the banner
     (setq dashboard-startup-banner "~/.emacs.d/themes/banners/ancient-erdtree.png")
     ;; Customize widgets
-    (setq dashboard-items '((recents . 6)
+    (setq dashboard-items '((recents . 7)
+                            (agenda . 10)
                             (bookmarks . 5)                            
-                            (projects . 5)
-                            (agenda . 10)))
+                            (projects . 3)))
     ;; Disable random footnote
     (setq dashboard-set-footer nil)
     ;; Set initial buffer to *dashboard* (also when opened as client)
@@ -326,6 +340,23 @@ well. I do not look at the top of the frame often, so we will just let it
 display the filename and the Emacs version for now
 #+begin_src emacs-lisp :tangle yes
 (setq frame-title-format '("" "[%b] - Emacs " emacs-version))
+#+end_src
+
+* Avoiding repetitive strain injuries: ergonomic features
+As I personally have problems with RSI, significant use of the =C-= or =M-=
+keybinds makes my hand hurt after some time. Especially when under the stress of
+deadlines or when working for significant amounts of time. 
+** Devil mode: time to use the comma!
+[[https://susam.github.io/devil/#install-automatically-from-melpa][Devil mode]] trades the comma-key for a modifier-free editing experience in
+Emacs. It sounds crazy, hence the name, but it might prove beneficial as the
+comma-key is for sure more easily reached without extensive use of the 'pinky'
+for =C-= and =M-= commands (which are all the commands!). 
+#+begin_src emacs-lisp :tangle yes
+  (use-package devil
+    :ensure t
+    :init
+    (global-devil-mode)
+    (global-set-key (kbd "C-,") ' global-devil-mode))
 #+end_src
 
 * Enriching Emacs functionality
@@ -809,7 +840,8 @@ writing an formatting TeX files in Emacs.
     :config
     (setq-default TeX-master nil)
     (setq TeX-auto-save t
-          TeX-parse-self t)
+          TeX-parse-self t
+          TeX-save-query nil)
     (setq font-latex-fontify-sectioning 'color)  ;; Disable fontification, e.g. \section
     (setq reftex-plug-into-AUCTeX t)
     (setq reftex-bibliography-commands '("bibliography" "nobibliography" "addbibresource"))
