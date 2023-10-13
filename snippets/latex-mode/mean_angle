@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: mean_angle
+# key: \<
+# --
+
+\langle $1 \rangle

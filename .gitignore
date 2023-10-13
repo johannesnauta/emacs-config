@@ -70,3 +70,4 @@ config.el
 /transient/
 /recentf
 /.lsp-session-v1
+/eln-cache/
