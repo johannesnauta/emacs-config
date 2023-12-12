@@ -281,14 +281,15 @@ actually fit my preferred style, although it has some potential!
     :config
     (dashboard-setup-startup-hook)
     ;; Set the title
-    (setq dashboard-banner-logo-title "Welcome Johannes")
+    (setq dashboard-banner-logo-title "Today is a gift!")
     ;; Set the banner
-    (setq dashboard-startup-banner "~/.emacs.d/themes/banners/ancient-erdtree.png")
+    (setq dashboard-startup-banner 'logo)
+    ;; (setq dashboard-startup-banner "~/.emacs.d/themes/banners/oogway-small.jpg")
     ;; Customize widgets
     (setq dashboard-items '((recents . 7)
                             (agenda . 10)
-                            (bookmarks . 5)                            
-                            (projects . 3)))
+                            (bookmarks . 5)
+                            (projects . 5)))
     ;; Disable random footnote
     (setq dashboard-set-footer nil)
     ;; Set initial buffer to *dashboard* (also when opened as client)
@@ -729,6 +730,7 @@ with them.
 
 *** Org agenda
 #+begin_src emacs-lisp :tangle yes
+  (setq org-agenda-include-diary t)
   (setq org-agenda-files (list "~/work/tasks/org/todo.org"
                                "~/personal/tasks/org/todo.org"))
 #+end_src
