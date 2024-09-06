@@ -106,7 +106,7 @@ so that you can use queries as ="fun get"= and it will find entries such as
   (setq search-whitespace-regexp ".*?")
 #+end_src
 
-*** Emacs Server
+** Emacs Server
 #+begin_src emacs-lisp :tangle yes
   (server-start)
 #+end_src
@@ -704,21 +704,30 @@ Set their colors.
           ("CANCELED" . org-warning)))
 #+end_src
 
-It is inconvenient to have to =M-x auto-fill-mode= every time you open an Org
-file. However, line wrapping (not only visually line wrapping, as when using
-=visual-line-mode-) is basically a must. Therefore, we add a hook that enables
-this every time we open an Org file.
-#+begin_src emacs-lisp :tangle yes
-  (add-hook 'org-mode-hook #'auto-fill-mode)
-  (add-hook 'org-mode-hook #'visual-line-mode)
-#+end_src
-
 Org links are by default openen in another window (i.e. it splits the current
 window in 2), which I think is undesired in many cases other than just quickly
 checking the file out. To change this default behavior, we need to change the
 value of =org-link-frame-setup=
 #+begin_src emacs-lisp :tangle yes
   (add-to-list 'org-link-frame-setup '(file . find-file))
+#+end_src
+
+*** Filling and unfilling regions
+It is inconvenient to have to =M-x auto-fill-mode= every time you open an Org
+file. However, line wrapping (not only visually line wrapping, as when using
+=visual-line-mode=) is basically a must. Therefore, we add a hook that enables
+this every time we open an Org file.
+#+begin_src emacs-lisp :tangle yes
+  (add-hook 'org-mode-hook #'auto-fill-mode)
+  (add-hook 'org-mode-hook #'visual-line-mode)
+#+end_src
+
+On the other end of the spectrum, often I find myself needing to paste some text
+into a box on a website where hard-coded newlines, resulting from wrapping, are
+quite jarring. Therefore one would like to "unfill" a region: enter [[https://github.com/purcell/unfill][=unfill=]].
+#+begin_src emacs-lisp :tangle yes
+  (use-package unfill
+    :ensure t)
 #+end_src
 
 *** Global org keys
