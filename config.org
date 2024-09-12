@@ -123,7 +123,7 @@ large.
 #+begin_src emacs-lisp :tangle yes
   (setq-default indent-tabs-mode nil)						;; Spaces instead of tabs
   (setq-default tab-width 2)			              ;; Default tab width
-  (setq-default fill-column 80)                 ;; Default column width
+  (setq-default fill-column 92)                 ;; Default column width
   (setq indent-line-function 'insert-tab)       ;; Indent current line(s) according to current major mode
   ;; Font and font size
   ;; (set-face-attribute 'default nil :family "Roboto Mono Medium" :height 115)
@@ -573,7 +573,14 @@ function names.
     :hook ((eglot-managed-mode . company-mode))
     :config
     (setq company-idle-delay 0.01)
-    (setq company-minimum-prefix-length 2))
+    (setq company-minimum-prefix-length 2)
+    (setq company-backends '((
+                              company-yasnippet
+                              company-capf
+                              company-dabbrev-code
+                              company-files
+                              company-dabbrev)))
+    )
 #+end_src
 ** Language server
 When coding one wants a so-called 'IDE-like experience', in that your text
