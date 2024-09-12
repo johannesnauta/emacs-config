@@ -932,7 +932,6 @@ on the file when compiling with =C-c C-a=.
               (setq TeX-command-default "arara")))
 #+end_src
 
-Finally, 
 ** Markdown configuration
 While Org mode is nice and all, I find myself reverting to Markdown in many
 cases. Most often for a =README.md= that is included in a Git repository. But it
@@ -967,8 +966,8 @@ Markdown live, so use =markdown-mode-preview=
 #+end_src
 
 ** Python configuration
-Currently I write most of my code in Python, so we need some code completion and
-things to make writing Python code less of a chore. First, let us fix the tab width
+Sometimes we write/read in Python, so wee need some code completion and things
+to make writing Python code less of a chore. First, let us fix the tab width
 #+begin_src emacs-lisp :tangle yes
 (add-hook 'python-mode-hook
       (lambda ()
@@ -978,9 +977,9 @@ things to make writing Python code less of a chore. First, let us fix the tab wi
 #+end_src
 
 *** Autocompletion
-Currently I use [[http://tkf.github.io/emacs-jedi/released/#][Jedi.el]] for Python auto-completion. Besides completion is also
-enables a small pop-up screen that shows information about a function or class,
-code location, and more.
+I use [[http://tkf.github.io/emacs-jedi/released/#][Jedi.el]] for Python auto-completion. Besides completion is also enables a
+small pop-up screen that shows information about a function or class, code
+location, and more.
 #+begin_src emacs-lisp :tangle yes
   (use-package jedi
     :ensure t
@@ -1015,7 +1014,7 @@ about our virtual environments and spin up a IPython kernel itself.
 #+end_src
 
 ** Julia configuration
-I want to start writing most of my code in [[https://julialang.org/][Julia]] as it is very appealing for
+Nowdays I write essentially all my code in [[https://julialang.org/][Julia]] as it is very appealing for
 scientific computing. While in general the support for Julia is not as
 widespread as Python's, there is significant movement leading to a bunch of
 tools (for Emacs). The most important one is [[https://github.com/JuliaEditorSupport/julia-emacs][Julia-mode]].
