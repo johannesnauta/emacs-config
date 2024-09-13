@@ -1,4 +1,4 @@
-#+TITLE:		config
+#+TITLE:    config
 #+SUBTITLE: Emacs configuration using org-babel
 #+AUTHOR:   Johannes Nauta
 #+STARTUP:  indent
@@ -309,12 +309,10 @@ So, current modifications is just to include the column number in the modeline.
 #+begin_src emacs-lisp :tangle yes
   (setq column-number-mode t)
 #+end_src
-Minor-modes rapidly clutter the modeline, especially if they have long messages
-(looking at you LSP-mode). While the actual active minor modes are actually not
-often of interest -- especially once they are activated and used often in the
-same workflow. [[https://github.com/tarsius/minions][minions]] can help with that and basically collapses all minor
-modes into a =-= (dash). So while they can still be inspected if necessary, they
-do not always clutter the modeline.
+Minor-modes rapidly clutter the modeline, especially if they have long messages.
+While the actual active minor modes are actually not often of interest -- especially once
+they are activated and used often in the same workflow. [[https://github.com/tarsius/minions][minions]] can help with that and
+basically collapses all minor modes into a =-= (dash). So while they can still be inspected if necessary, they do not always clutter the modeline.
 #+begin_src emacs-lisp :tangle yes
   (use-package minions
     :ensure t
@@ -446,7 +444,6 @@ be tailored to your needs if needed.
     ("C-." . embark-act)
     :init
     :config
-
     ;; Hide the mode line of the Embark live/completions buffers
     (add-to-list 'display-buffer-alist
                  '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
@@ -454,9 +451,7 @@ be tailored to your needs if needed.
                    (window-parameters (mode-line-format . none)))))
 #+end_src
 
-
-
-** Git magick with Magit
+** Git magic with Magit
 [[https://magit.vc/][Magit]] is a complete text- and keyboard-based user interface to Git. In the
 background, Magit just runs your standard Git commands. However, it provides you
 with extensive flexibility when using those commands, and lets you additionally
@@ -531,13 +526,12 @@ buffers associated with) a project, find references in the project, and more. It
 integrates with the built-in [[https://github.com/emacs-mirror/emacs/blob/master/lisp/progmodes/project.el][project.el]].
 #+begin_src emacs-lisp :tangle yes
   (use-package projectile
-    :ensure t
-    :pin melpa-stable
-    :init
-    (projectile-mode +1)
-    :bind (:map projectile-mode-map
-                ("s-p" . projectile-command-map)
-                ("C-c p" . projectile-command-map)))
+      :ensure t
+      :init
+      (projectile-mode +1)
+      :bind (:map projectile-mode-map
+                  ("s-p" . projectile-command-map)
+                  ("C-c p" . projectile-command-map)))
 #+end_src
 
 * Emacs YASnippets
@@ -593,41 +587,13 @@ LSP driver.
 #+begin_src emacs-lisp :tangle yes
   (use-package eglot
     :ensure t
+    :after projectile
     :config
     (setq eglot-autoshutdown t)
     (setq eldoc-echo-area-use-multiline-p nil)
     (put 'eglot-note 'flymake-overlay-control nil)
     (put 'eglot-warning 'flymake-overlay-control nil)
     (put 'eglot-error 'flymake-overlay-control nil))
-#+end_src
-
-** LSP
-When coding one wants a so-called 'IDE-like experience', in that your text
-editor recognizes previously defined function for autocompletion, displays
-documentation of functions, checks syntax errors, etc. Emacs provides these
-features using =lsp-mode=; a mode that supports *all* language features defined
-in the Language Server Protocol (LSP). As always, Emacs' =lsp-mode= is highly
-flexible and easy to configure and works well with popular Emacs packages like
-=company=, =flycheck= and =projectile=.
-#+begin_src emacs-lisp :tangle no
-  (use-package lsp-mode
-    :ensure t  
-    :commands (lsp lsp-deferred)
-    :init
-    ;; Usually the =lsp-keymap-prefix= is bound to "C-c l", but this is already
-    ;; bound to the (very useful!) =org-store-link=, which we do not want to
-    ;; override. "C-c o" ('o' for option) was empty, so use it here.
-    (setq lsp-keymap-prefix "C-c o")
-    :config
-    (define-key lsp-mode-map (kbd lsp-keymap-prefix) lsp-command-map)
-    :hook (;; add modes
-           (julia-mode . lsp-deferred)
-           (TeX-mode . lsp-deferred)
-           (LaTeX-mode . lsp-deferred)
-           ;; (julia-ts-mode . lsp-deferred)
-           ;; =lsp-enable-which-key-integration= gives us descriptions of what the keys
-           ;; do, which helps us figure out what they do when using =lsp-mode=.
-           (lsp-mode . lsp-enable-which-key-integration)))
 #+end_src
 
 *** Languages
