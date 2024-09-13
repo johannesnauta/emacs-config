@@ -5,7 +5,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(devil cmake-mode zenburn-theme yasnippet-snippets which-key vterm vmd-mode vertico use-package poke-line ox-pandoc org-roam org-fragtog org-bullets orderless minions markdown-preview-mode marginalia magit lua-mode lsp-latex lsp-julia lambda-line julia-repl jedi hydra exec-path-from-shell esup emojify eglot-jl diminish dashboard company citar-embark bug-hunter avy autothemer auctex all-the-icons))
+   '(eglot gnu-elpa-keyring-update devil cmake-mode zenburn-theme yasnippet-snippets which-key vterm vmd-mode vertico use-package poke-line ox-pandoc org-roam org-fragtog org-bullets orderless minions markdown-preview-mode marginalia magit lua-mode lsp-latex lsp-julia lambda-line julia-repl jedi hydra exec-path-from-shell esup emojify eglot-jl diminish dashboard company citar-embark bug-hunter avy autothemer auctex all-the-icons))
  '(warning-suppress-log-types '((comp))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.

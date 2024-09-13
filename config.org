@@ -27,18 +27,18 @@ out of Emacs when you let =use-package= do all the configuration when possible.
 First we need to use the built-in package manager to actually download
 =use-package= when it is not available.
 #+begin_src emacs-lisp :tangle yes
-    ;; Use the built-in package manager and specify archive
-    (require 'package)
-    (add-to-list 'package-archives
-                 '("melpa" . "https://melpa.org/packages/") t)
-    (add-to-list 'package-archives
-                 '("melpa-stable" . "https://stable.melpa.org/packages/") t)
-    ;; Initialize built-in package management
-    (package-initialize)
-    ;; Install use-package if not available
-    (unless (package-installed-p 'use-package)
-      (package-refresh-contents)
-      (package-install 'use-package))
+  ;; Use the built-in package manager and specify archive
+  (require 'package)
+  (add-to-list 'package-archives
+               '("melpa" . "https://melpa.org/packages/") t)
+  (add-to-list 'package-archives
+               '("melpa-stable" . "https://stable.melpa.org/packages/") t)
+  ;; Initialize built-in package management
+  (package-initialize)
+  ;; Install use-package if not available
+  (unless (package-installed-p 'use-package)
+    (package-refresh-contents)
+    (package-install 'use-package))
 #+end_src
 
 Then we can actually load =use-package=
@@ -600,6 +600,7 @@ LSP driver.
     (put 'eglot-warning 'flymake-overlay-control nil)
     (put 'eglot-error 'flymake-overlay-control nil))
 #+end_src
+
 ** LSP
 When coding one wants a so-called 'IDE-like experience', in that your text
 editor recognizes previously defined function for autocompletion, displays
@@ -1006,11 +1007,11 @@ terminal and hook Emacs to that running kernel on your localhost using
 =ein:login=. In this way we do not have to fiddle much with Python kernels,
 virtual environments, and more. In the future we might want to make EIN know
 about our virtual environments and spin up a IPython kernel itself.
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp :tangle no
   (use-package ein
-  	:ensure t
-    :config
-    (setq ein:completion-backend 'ein:use-ac-jedi-backend))
+     :ensure t
+     :config
+     (setq ein:completion-backend 'ein:use-ac-jedi-backend))
 #+end_src
 
 ** Julia configuration
