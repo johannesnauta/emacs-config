@@ -17,7 +17,10 @@ Welcome to my literate Emacs configuration using =org-babel=.
 
 Note that some of the libraries that are used might need to be installed. If
 that is the case, simply =M-x package-install= the particular package that
-raises an error.
+raises an error. This may be avoided when using a better package manager. But when possible
+I always prefer to use at little extra packages. This ensures that many of the features can
+also be used on other systems, such simple remotes. This can be useful to quickly edit some
+scripts with the muscle memory of a trained Emacs-pro.
   
 * =use-package=: The package manager
 =use-package= is my current bread-and-butter for installing packages to use with
