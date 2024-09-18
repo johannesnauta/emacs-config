@@ -1,0 +1,771 @@
+#+TITLE:    config
+#+SUBTITLE: Emacs configuration 
+#+AUTHOR:   Johannes Nauta
+#+STARTUP:  indent
+
+* A literate Emacs configuration
+Welcome to my literate Emacs configuration written in Org.
+
+** How to use this literal program
++ Pull this file from my [[https://github.com/github-jnauta/emacs-config][Github repository]]
++ Open Emacs
++ =org-babel= should already be installed when using a version of Emacs >=24
++ Tangle this file with =org-babel-tangle=
++ Reload Emacs
++ Enjoy Emacs
+
+  Note that this configuration uses [[https://github.com/radian-software/straight.el][=straight.el]]=, which is a purely functional package
+  manager for the, so-called, Emacs hacker. For me, the main benefits of using
+  =straight.el= over the standard package manager, =package.el=, is the fact that it makes
+  it easier to rollback to previous version of packages. From my experience,
+  package-depency hell is something one wishes to avoid at all costs, and =straight.el=
+  provides a way to avoid it.
+
+* =straight.el=: The package manager
+Following the documentation, we need the following bootstrap code
+#+begin_src emacs-lisp :tangle init.el
+  (setq user-emacs-directory "~/.straight.emacs.d")
+  (defvar bootstrap-version)
+  (let ((bootstrap-file
+         (expand-file-name
+          "straight/repos/straight.el/bootstrap.el"
+          (or (bound-and-true-p straight-base-dir)
+              user-emacs-directory)))
+        (bootstrap-version 7))
+    (unless (file-exists-p bootstrap-file)
+      (with-current-buffer
+          (url-retrieve-synchronously
+           "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+           'silent 'inhibit-cookies)
+        (goto-char (point-max))
+        (eval-print-last-sexp)))
+    (load bootstrap-file nil 'nomessage))
+  ;; Load Org really early to avoid =org-babel-load-file= to use the built-in version
+  (straight-use-package 'org)
+  (org-babel-load-file (expand-file-name "config.org" "~/.straight.emacs.d"))
+#+end_src
+
+** Integration with =use-package=
+=use-package= is a macro that provides convenient syntax related to installing and
+configuring packages. It does not install the packages (i.e., it is *not* a package
+manager --- =straight.el= is!), but it is widely used and quite useful, so we would like
+to integrate these tools. Luckily, this is easy:
+#+begin_src emacs-lisp :tangle yes
+  (straight-use-package 'use-package)
+  (setq straight-use-package-by-default t)
+  ;; (setq debug-on-error t)
+#+end_src
+  
+* Emacs default behavior
+** Environment variables
+In some cases, e.g. when not starting Emacs from the terminal, Emacs' shell has different
+environment variables than the user's shell. This is inconvenient as it might result in
+some packages not finding the binaries of installed libraries. A prime example is LaTeX,
+of which the =texlive= installation is exported to the ="$PATH"= variable. Therefore, we
+use =exec-path-from-shell= to ensure that Emacs's environment variables are the same as in
+the shell.
+#+begin_src emacs-lisp :tangle yes
+  (use-package exec-path-from-shell)
+  ;; Sets $MANPATH, $PATH and exec-path from your shell, only when using the GUI.
+  (when (memq window-system '(mac ns x))
+    (exec-path-from-shell-initialize))
+#+end_src
+
+** Emacs server
+Start a server for other processes to attach to
+#+begin_src emacs-lisp :tangle yes
+  (server-start)
+#+end_src
+
+** Increase amount of data which Emacs reads from processes
+Standard Emacs read cache default size is (only) 4k, so change it here, say to 1MB.
+#+begin_src emacs-lisp :tangle yes
+  (setq read-process-output-max (* 1024 1024)) ;; 1mb
+#+end_src
+
+** Sensible miscellaneous defaults
+Finally, there are some defaults that are sensible to set, such as the TAB width, among
+others. You can define other global keybindings here as well, as long as these are not
+originating from a package that is handled by =use-package=. These should be handled by
+=use-package= itself when loaded.
+#+begin_src emacs-lisp :tangle yes
+  (setq-default indent-tabs-mode nil)      ;; Spaces instead of tabs
+  (setq-default tab-width 2)               ;; Default tab width
+  (setq-default fill-column 90)            ;; Default column width
+  (setq indent-line-function 'insert-tab)  ;; Indent lines according to current major mode
+#+end_src
+
+** Suppressing default behaviors
+There are some default behaviors which are just annoying, such as the startup
+splash screen or the sound on error or EOF. We can suppress some more things
+while we're at it.
+#+begin_src emacs-lisp :tangle yes
+  (setq inhibit-startup-message t)  ;; Suppress startup splash screen
+  (setq ring-bell-function 'ignore) ;; Suppress sound on error or EOF
+  (menu-bar-mode -1)                ;; Turn off menu bar
+  (tool-bar-mode -1)                ;; Turn off tool bar
+  (setq scroll-conservatively 100)  ;; Make scrolling better
+  (show-paren-mode 1)               ;; Highlight matching parentheses
+  (electric-indent-mode -1)         ;; Turn off indentation in files
+  (setq native-comp-async-report-warnings-errors nil)
+#+end_src
+
+** Enabling default behaviors
+In contrast, some behavior is not turned on by default, so we do that here
+#+begin_src emacs-lisp :tangle yes
+  (global-display-line-numbers-mode 1)  ;; Display line numbers in every buffer
+  (defalias 'yes-or-no-p 'y-or-n-p)     ;; All confirmations to single letters
+  (delete-selection-mode 1)             ;; Replace highlighted/selected text
+#+end_src
+
+#+begin_src emacs-lisp :tangle yes
+  ;; Build a list of recently opened files
+  (recentf-mode 1)
+  (setq recentf-max-menu-items 50)
+  (setq recentf-max-saved-items 50)
+#+end_src
+
+** Enabling 'fuzzy' search
+!!! TODO
+	Replace this by =avy=?
+
+Emacs' isearch is strict and it only finds exact hits. Ideally, we would like to fuzzy
+search within our files. While there are packages available that implement fuzzy search, I
+found they are often not well maintained (anymore). Luckily, there exists a simple 'hack'
+that enables similar-feeling behavior. The hack is to simply insert some regex when
+entering a space, Emacs' isearch is strict, as in, it only finds exact hits. But ideally
+we would always like to fuzzy search. While there are some packages available, they are
+often not well maintained (anymore). However, a super simple 'hack' that enables
+similar-feeling behavior is to simply insert some regex when entering a space, so that you
+can use queries as ="fun get"= and it will find entries such as ="function get_data"=, or
+something similar.
+#+begin_src emacs-lisp :tangle yes
+  (setq search-whitespace-regexp ".*?")
+#+end_src
+
+** Changing where backups are stored
+Emacs, just like Vim, makes regular backups of file that are undergoing active
+editing. This feature is very nice as it might save you at some point when you
+make a mistake. However, the Emacs backup files quickly clutter your inventory
+and make you constantly include them in a =.gitignore=, as you do not want these
+to fill your repositories. Much better behavior is to actually store them in a
+separate directory from which you can easily retrieve them if you have to.
+If you wish, you can also tell Emacs how many versions you wish to keep, but I
+just keep with the defaults (2) for now.
+#+begin_src emacs-lisp :tangle yes
+  (setq backup-directory-alist '(("." . "~/.emacs.d/backup"))
+        backup-by-copying t    ; Don't delink hardlinks
+        version-control t      ; Use version numbers on backups
+        delete-old-versions t  ; Automatically delete excess backups
+        ;; kept-new-versions 5    ; how many of the newest versions to keep
+        ;; kept-old-versions 5    ; and how many of the old
+        )
+#+end_src
+
+* Fonts
+A sensible font is important, so set it here. Note that the font needs to be installed
+seperately in the distro of choice. After installing, simply select the desired font. I
+change the height a bit as I find the default height to be slighly too large.
+#+begin_src emacs-lisp :tangle yes
+  ;; Font and font size
+  ;; (set-face-attribute 'default nil :family "Roboto Mono Medium" :height 115)
+  ;; (set-face-attribute 'default nil :family "Iosevka" :height 115)
+  ;; (set-face-attribute 'default nil :family "Commit Mono" :height 115)
+  (set-face-attribute 'default nil :family "Fira Code" :height 115)
+#+end_src
+
+* Ergonomics: avoiding repetitive strain injuries
+As I personally have had problems with RSI, significant use of the =C-= or =M-= keybinds
+makes my hand hurt after some time (known as "Emacs pinky"). For me, this is especially
+true when under the stress of deadlines or when working for significant amounts of
+time. The changes below aim to increase ergonomics and reduce the stress on my hands.
+
+** Devil mode: time to use the comma!
+[[https://susam.github.io/devil/#install-automatically-from-melpa][Devil mode]] trades the comma-key for a modifier-free editing experience in Emacs. It sounds
+crazy, hence the name, but once you are used to it, I find it amazing. Obviously, the
+comma-key is for sure more easily reached without extensive use of the 'pinky' for =C-=
+and =M-= commands (which are all the commands!).
+#+begin_src emacs-lisp :tangle yes
+  (use-package devil
+    :init
+    (global-devil-mode)
+    (global-set-key (kbd "C-,") ' global-devil-mode))
+#+end_src
+
+** Global keybindings
+One often needs to switch windows, and the default keys are not that well designed, in my
+opinion. Put it here to something more sensible.
+#+begin_src emacs-lisp :tangle yes
+(global-set-key (kbd "M-o") #'other-window)
+#+end_src
+
+*** Splitting windows: to focus or not to focus
+When programming I often have more than one window open. When you split a window
+vertically using =C-x 3= the default behavior is to keep the focus (the cursor) in the
+previous window. This is annoying. Luckily, there has been a [[https://github.com/daedreth/UncleDavesEmacs/blob/master/config.org][programmer]] that was equally
+annoyed (but much more versed in emacs-lisp) and wrote some nice functions to deal with
+this. Note that I only include the vertical split as I basically never find myself
+splitting horizontally.
+#+begin_src emacs-lisp :tangle yes
+  (defun split-and-follow-vertically ()
+    (interactive)
+    (split-window-right)
+    (balance-windows)
+    (other-window 1))
+  (global-set-key (kbd "C-x 3") 'split-and-follow-vertically)
+#+end_src
+
+* General enrichments: Emacs is mine
+** Visual configurations
+*** The theme
+Of course, no editor is your own when it does not look like your own. The
+specific theme is my personal preference, so please feel free to change it to a
+theme that better suits your needs.
+[[https://github.com/bbatsov/zenb
+urn-emacs][Zenburn]] for Emacs is a direct port of the Zenburn theme originally created for
+vim. I (and others) think it is one of the best low contrast color themes out
+there that is super easy on the eyes and has pastel colors!
+#+begin_src emacs-lisp :tangle yes
+  (use-package zenburn-theme
+    :config
+    (load-theme 'zenburn t))
+#+end_src
+
+*** The startup screen
+#+begin_src emacs-lisp :tangle yes
+  (use-package dashboard
+    :config
+    (dashboard-setup-startup-hook)
+    ;; Set the banner
+    (setq dashboard-startup-banner 'official)
+    ;; Customize widgets
+    (setq dashboard-items '((recents . 7)
+                            (agenda . 10)
+                            (bookmarks . 5)
+                            (projects . 5))))
+  ;; Disable random footnote
+  ;; (setq dashboard-set-footer nil)  
+#+end_src
+
+*** The mode line
+The modeline in Emacs is the single-line below each buffer in a window. It can display
+important information on the opened file, such as the Git branch, the filename, and [[https://www.emacswiki.org/emacs/ModeLine][much
+more]]. While I have played around with some configurations, I find the default modeline
+quite respectable, and tweaking the modeline was quite difficult.  So, current
+modifications is just to include the column number in the modeline.
+#+begin_src emacs-lisp :tangle yes
+  (setq column-number-mode t)
+#+end_src
+Minor-modes rapidly clutter the modeline, especially if they have long messages. While
+the actual active minor modes are actually not often of interest, especially once they
+are activated and used often in the same workflow. [[https://github.com/tarsius/minions][minions]] can help with that and
+basically collapses all minor modes into a =-= (dash). So while they can still be
+inspected if necessary, they do not always clutter the modeline.
+#+begin_src emacs-lisp :tangle yes
+  (use-package minions
+    :config (minions-mode 1))
+#+end_src
+
+**** Adding Pokemon
+On the inside, I am still a kid: I like Pokemon. Some Pokemon, like Gengar, are just
+bit cooler than others. Wouldn't it be cool to have a small Gengar in the modeline?
+Luckily for us, [[https://github.com/RyanMillerC/poke-line][poke-line]] enables exactly this behavior. It also adds a line/bar that
+shows you how far down the file you currently are. Neat!
+#+begin_src emacs-lisp :tangle yes
+  (use-package poke-line
+    :init
+    (poke-line-global-mode t)
+    :config
+    (setq-default poke-line-pokemon "gengar")
+    (setq-default poke-line-bar-length 10))
+#+end_src
+
+** Never leave Emacs: adding a terminal emulator
+When programming I often find myself reaching for a terminal window to, for example, to
+browse through my current working directory (although I should probably do this using
+Emacs...), and many other things. As we do not want to leave the safety of our carefully
+crafted Emacs environment, we need a terminal emulator. I currently use [[https://github.com/akermu/emacs-libvterm][vterm]], as I found
+it provides the most complete terminal experience and integrates nicely with other
+packages, e.g. the =Julia= REPL.
+
+!!! Note that it is still in α-stage, so be aware of fundamental changes down the line!
+#+begin_src emacs-lisp :tangle yes
+  (use-package vterm
+    :init
+    (setq vterm-timer-delay 0.01)
+    :config
+    (setq vterm-max-scrollback 2048))
+#+end_src
+Additionally we choose a global key combination to open vterm, in this case =C-`=.
+#+begin_src emacs-lisp :tangle yes
+  (global-set-key (kbd "C-`") `vterm)
+#+end_src
+
+*** Change how =vterm= is displayed when opened
+The vterm normally opens in an already opened buffer. This is often unwanted as you want
+to use the terminal on the side while keeping your current active buffer open. My current
+preference is to open the terminal on the bottom. You can always open it in the current
+window, kill some windows, switch around, etc.
+#+begin_src emacs-lisp :tangle yes
+  (add-to-list 'display-buffer-alist
+               '("\*vterm\*"
+                 (display-buffer-in-side-window)
+                 (window-height . 0.275)         ;; Specify fraction of window height
+                 (side . bottom)
+                 (slot . 0)))
+#+end_src
+
+** Navigating within buffers
+Navigating the current buffer can sometimes be a hassle as you have to press the arrow
+keys, =,-n= or =,-p= (note the comma, shoutout to =devil=) or, in extreme cases, use the
+mouse (/shudder/). Sometimes you need to be at very specific points in a document, and
+luckily for me there exists a beautiful package that handles this: [[https://github.com/abo-abo/avy][=avy=]]. While explaining
+it sounds complex, it boils down to =M-x avy-goto-char= (rebound to =M-s=) and pressing a
+specific letter or key. On each instance of the key a letter will appear and pressing that
+letter will bring you immediately to that destination. Just try it!
+#+begin_src emacs-lisp :tangle yes
+  (use-package avy
+    :bind ("M-s" . avy-goto-char))
+#+end_src
+
+** Interactive completion of Emacs functions
+[[https://github.com/minad/vertico][Vertico]] provides us with a minimalistic vertical completion UI that is based on the
+default completion system. Simple, yet powerful.
+#+begin_src emacs-lisp :tangle yes
+  (use-package vertico
+    :config
+    (vertico-mode))
+#+end_src
+
+And let =vertico= persist the history over Emacs restarts, so we can, if we want, quickly
+re-open files that we opened in a previous session.
+#+begin_src emacs-lisp :tangle yes
+  (use-package savehist
+    :config
+    (savehist-mode))
+#+end_src
+
+As with =vertico= the order of the regexp matters, it is often convenient to invoke
+[[https://github.com/oantolin/orderless][Orderless]], which makes the completion style match multiple regexps in any order. For
+example, I can =M-x fun fin= and =M-x find-function= will be the top candidate.
+#+begin_src emacs-lisp :tangle yes
+  (use-package orderless
+    :custom
+    (completion-styles '(orderless basic))
+    (completion-category-overrides '((file (styles basic partial-completion)))))
+#+end_src
+
+** Show active bindings using =which-key=
+[[https://github.com/justbur/emacs-which-key/][=which-key=]] is a minor mode for Emacs that displays the key bindings following
+your currently entered incomplete command in a popup. This is super useful when
+using new packages as you often are not aware of all the shortcuts. With
+=which-key= you only have to remember the prefix, not the entire command. For
+example, you can press =C-x= and after (the default of) 1 second the minibuffer
+will expand with the keybindings that follow =C-x=.
+#+begin_src emacs-lisp :tangle yes
+  (use-package which-key
+    :config
+    (which-key-mode)
+    :diminish which-key-mode)
+#+end_src
+
+** Annotations in the minibuffer
+In many cases, especially when using relatively obscure Emacs functionality, it
+becomes unclear what a specific command does. [[https://github.com/minad/marginalia][Marginalia]] adds annotation in the
+minibuffer that explains the function of the command. This makes it very useful
+when using =M-x= functions, especially when combined with the above initialize
+completion frameworks.
+#+begin_src emacs-lisp :tangle yes
+  (use-package marginalia
+    :config
+    (marginalia-mode))
+#+end_src
+
+** Mini-buffer actions with Embark
+When having the cursor at a specific point when using Emacs, you often need to think about
+what to do with a selected region before you can do this. However, it can be
+easier. [[https://github.com/oantolin/embark][Embark]] enables you to suggest what to do with a specific selection, before you
+even think what to do with it. Effectively, it acts like a 'right-click' on a piece of
+text in any other software. Is the text a link?  Embark will suggest you to open it in a
+browser. Is it a list? Embark might suggest you to order the list based on some
+constraints. The list goes on and on. Embark comes with hundreds of actions preconfigures
+and, of course, they can be tailored to your needs if needed.
+#+begin_src emacs-lisp :tangle yes
+  (use-package embark
+    :bind
+    ("C-." . embark-act)
+    :config
+    ;; Hide the mode line of the Embark live/completions buffers
+    (add-to-list 'display-buffer-alist
+                 '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                   nil
+                   (window-parameters (mode-line-format . none)))))
+#+end_src
+
+** Managing projects with =Projectile.el=
+[[https://github.com/bbatsov/projectile][Projectile.el]] is a project interaction library. It basically provides a lot of features
+operating on the project level, such as opening and closing (all buffers associated with)
+a project, find references in the project, and more. It integrates with the built-in
+[[https://github.com/emacs-mirror/emacs/blob/master/lisp/progmodes/project.el][project.el]].
+#+begin_src emacs-lisp :tangle yes
+  (use-package projectile
+    :config
+    (projectile-mode +1)
+    :bind (:map projectile-mode-map
+                ("s-p" . projectile-command-map)
+                ("C-c p" . projectile-command-map)))
+#+end_src
+
+* The golden nugget: =git= magic with Magit
+[[https://magit.vc/][Magit]] is a complete text- and keyboard-based user interface to Git. In the background,
+Magit just runs your standard Git commands. However, it provides you with extensive
+flexibility when using those commands, and lets you additionally discover a whole set of
+rarely used features that Git entails. In my opinion, it is one of the best packages Emacs
+has and I use it frequently and happily.
+#+begin_src emacs-lisp :tangle yes
+  (use-package magit
+    :config
+    (setq magit-display-buffer-function 'magit-display-buffer-fullframe-status-v1)
+    (setq magit-bury-buffer-function 'magit-restore-window-configuration))
+#+end_src
+
+** Showing diffs and resolving conflicts with =hydra= and =smerge=
+While conflicts can be resolved using the built-in =smerge-mode=, you normally have to
+invoke the chosen =smerge=-command for each diff you'd like to resolve. This is
+cumbersome. Here, [[https://github.com/abo-abo/hydra][Hydra]] comes into play. Briefly, Hydra allows sticky keys that enable
+successive keybinds without invoking the initial prefix. For example, if you have bound
+=C-c j= and =C-c k=, Hydra enables you to perform actions such as =C-c jjkk3j5k=, which
+saves a bunch of keys. While it might not always come in handy, in combination with smerge
+it is almost a necessity.
+#+begin_src emacs-lisp :tangle yes
+  (use-package hydra)
+#+end_src
+Then, we also configure =smerge= such that it works nicely with =hydra= when resolving
+merge conflicts.
+#+begin_src emacs-lisp :tangle yes
+  ;; Gracefully yoinked from https://github.com/alphapapa/unpackaged.el#hydra 
+  (use-package smerge-mode
+    :config
+    (defhydra smerge-hydra
+      (:color pink :hint nil :post (smerge-auto-leave))
+      "
+  ^Move^       ^Keep^               ^Diff^                 ^Other^
+  ^^-----------^^-------------------^^---------------------^^-------
+  _n_ext       _b_ase               _<_: upper/base        _C_ombine
+  _p_rev       _u_pper              _=_: upper/lower       _r_esolve
+  ^^           _l_ower              _>_: base/lower        _k_ill current
+  ^^           _a_ll                _R_efine
+  ^^           _RET_: current       _E_diff
+  "
+      ("n" smerge-next)
+      ("p" smerge-prev)
+      ("b" smerge-keep-base)
+      ("u" smerge-keep-upper)
+      ("l" smerge-keep-lower)
+      ("a" smerge-keep-all)
+      ("RET" smerge-keep-current)
+      ("\C-m" smerge-keep-current)
+      ("<" smerge-diff-base-upper)
+      ("=" smerge-diff-upper-lower)
+      (">" smerge-diff-base-lower)
+      ("R" smerge-refine)
+      ("E" smerge-ediff)
+      ("C" smerge-combine-with-next)
+      ("r" smerge-resolve)
+      ("k" smerge-kill-current)
+      ("ZZ" (lambda ()
+              (interactive)
+              (save-buffer)
+              (bury-buffer))
+       "Save and bury buffer" :color blue)
+      ("q" nil "cancel" :color blue))
+    :hook (magit-diff-visit-file . (lambda ()
+                                     (when smerge-mode
+                                       (smerge-hydra/body)))))
+#+end_src
+
+* Snippets: gotta go fast
+No editor is complete without inserting large, pre-formatted textblocks into your files
+with the press of a button. What separates a fast programmer (or writer) from a slow one
+is basically the use of such snippets. For example, all elisp source code blocks in this Org
+file are inserted with the =elisp_<TAB>= button combination. I personally use [[https://github.com/joaotavora/yasnippet][YASnippet]] in
+combination with a popular repository that contains snippets for a lot of modes,
+[[https://github.com/AndreaCrotti/yasnippet-snippets][YASnippet-snippets]].
+
+Snippets themselves should also be included in this repository, see the file:snippets/
+directory. So you can change them if you so desire.
+#+begin_src emacs-lisp :tangle yes
+  (use-package yasnippet
+    :hook (prog-mode . yas-minor-mode))
+  ;; (LaTeX-mode . yas-minor-mode))
+  (use-package yasnippet-snippets
+    :config
+    (yasnippet-snippets-initialize))
+#+end_src
+
+* LSP: gotta code fast
+Emacs has two major LSP providers, =lsp-mode= and =eglot=. As =eglot= will be in Emacs'
+core (from v29 onwards), and as I have found =lsp-mode= to come with some
+not-so-easy-to-solve issues with =julia=, I have chosen =eglot=.
+
+** Eglot
+#+begin_src emacs-lisp :tangle yes
+  (use-package eglot
+    :config
+    (setq eglot-autoshutdown t)
+    (setq eldoc-echo-area-use-multiline-p nil)
+    (put 'eglot-note 'flymake-overlay-control nil)
+    (put 'eglot-warning 'flymake-overlay-control nil)
+    (put 'eglot-error 'flymake-overlay-control nil))
+#+end_src
+
+** Autocompletion
+[[https://company-mode.github.io/][Company]] (COMPletion ANYwhere) is a text completion framework for Emacs. It pops up a small
+UI that shows you candidates for the symbols you have currently typed, making development
+much faster and avoid spelling mistakes, e.g. in function names. It works with =eglot= or
+with snippets (when configured).
+#+begin_src emacs-lisp :tangle yes
+  (use-package company
+    :hook ((eglot-managed-mode . company-mode))
+    :config
+    (setq company-idle-delay 0.01)
+    (setq company-minimum-prefix-length 2)
+    (setq company-backends '((
+                              company-yasnippet
+                              company-capf
+                              company-dabbrev-code
+                              company-files
+                              company-dabbrev)))
+    )
+#+end_src
+
+** Specify languages
+For =eglot= to function, you need to install the language server for the specific language
+that you are interested in. Below, the language servers that I use will be installed.
+
+*Supported languages*
+1. =julia=
+2. ...
+
+*** Julia
+The timeout can be configured. It will most likely need to be large the first time
+=eglot-jl= is invoked, as the language server will need to be installed. Afterwards the
+timeout can be adjusted when desired.
+#+begin_src emacs-lisp :tangle yes
+  (use-package eglot-jl
+    :config
+    (setq eglot-connect-timeout 10000))
+#+end_src
+
+* Specific enrichtments: mode-specific configurations
+** LaTeX
+LaTeX is amazing, but compiling =.tex= files is less-so. When writing, we want to automate
+as much as we can so we can focus on writing instead of debugging compiler errors. This
+obviously includes heavy use of, e.g., snippets [ref YAS] and autocompletion [ref EGLOT],
+but also quick and easy (re-)compilation of =.tex= files, building a =.bib=, etc. The
+configuration below is built on the amazing [[https://www.gnu.org/software/auctex /][AUCTeX]], which is an extensible package for
+writing an formatting TeX files in Emacs.
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package tex
+    :straight auctex
+    :defer t
+    :config
+    (setq-default TeX-master nil)
+    (setq TeX-auto-save t
+          TeX-parse-self t
+          TeX-save-query nil)
+    (setq font-latex-fontify-sectioning 'color)  ;; Disable fontification, e.g. \section
+    (setq font-latex-fontify-sectioning 1.0)
+    (setq reftex-plug-into-AUCTeX t)
+    (setq reftex-bibliography-commands '("bibliography" "nobibliography" "addbibresource"))
+    ;; Add Evince as default (see below)
+    ;; (add-to-list 'TeX-view-program-selection '(output-pdf "Evince"))
+    ;; (setq TeX-view-program-selection '((output-pdf "Evince")))
+    ;; Add Zathura as default (see below)
+    (add-to-list 'TeX-view-program-selection '(output-pdf "Zathura"))
+    (setq TeX-view-program-selection '((output-pdf "Zathura")))
+    :hook ((LaTeX-mode . turn-on-reftex)              ;; Turn on RefTeX
+           (LaTeX-mode . eglot-ensure)                ;; Turn on eglot (LSP)
+           (LaTeX-mode . TeX-source-correlate-mode)   ;; Correlated PDF and tex file       
+           (TeX-after-compilation-finished-functions . TeX-revert-document-buffer)))
+#+end_src
+
+#+begin_src emacs-lisp :tangle yes
+  (defun hack-one-local-variable (var val)
+    "Set local variable VAR with value VAL.
+  If VAR is `mode', call `VAL-mode' as a function unless it's
+  already the major mode."
+    (pcase var
+      ('mode
+       (let ((mode (intern (concat (downcase (symbol-name val))
+                                   "-mode"))))
+         (set-auto-mode-0 mode t)))
+      ('eval
+       (pcase val
+         (`(add-hook ',hook . ,_) (hack-one-local-variable--obsolete hook)))
+       (save-excursion (eval val t)))
+      (_
+       (hack-one-local-variable--obsolete var)
+       ;; Make sure the string has no text properties.
+       ;; Some text properties can get evaluated in various ways,
+       ;; so it is risky to put them on with a local variable list.
+       (if (stringp val)
+           (set-text-properties 0 (length val) nil val))
+       (set (make-local-variable var) val))))
+#+end_src
+
+*** Using arara
+[[https://gitlab.com/islandoftex/arara][Arara]] is a TeX automation tool based on rools that are specified within the =.tex=
+documents themselves. This makes it easier to compile LaTeX documents as one does not need
+to remember and fill in command line arguments. Additionally, it is most likely already
+installed as it is included in major TeX distributions.  While =arara= is mostly a command
+line tool, we can tell AucTeX to run =arara= on the file when compiling with =C-c C-a=.
+(Inspired by [[https://github.com/kolesarm/Emacs-configuration/blob/master/site-lisp/my-init-latex.el][this auctex config file]] and [[https://emacs.stackexchange.com/questions/9715/arara-integration-in-emacs][this stackexchange discussion]].)
+#+begin_src emacs-lisp :tangle yes
+  (add-hook 'LaTeX-mode-hook
+            (lambda ()
+              (push
+               '("arara" "arara --verbose %s" TeX-run-TeX nil t
+                 :help "Run arara on file") TeX-command-list)
+              (setq TeX-command-default "arara")))
+#+end_src
+
+** Org
+*** Automate tangling for this specific file
+!!! work in progress
+    I believe there is an easier way to do this.
+#+begin_src emacs-lisp :tangle yes
+  (defun org-babel-tangle-config ()
+    (when (string-equal (buffer-file-name)
+  			                (expand-file-name "config.org" "~/.straight.emacs.d/"))
+      (let ((org-config-babel-evaluate nil))
+  	    (org-babel-tangle))))
+  ;; Add hook
+  (add-hook 'org-mode-hook
+  	        (lambda ()
+  	          (add-hook 'after-save-hook #'org-babel-tangle-config)))
+#+end_src
+
+*** Default behaviors
+The default bullets of Org are quite ugly (just bullets basically), so we make them look
+better. The same goes for the collapsed headers, called the 'ellipsis'.
+#+begin_src emacs-lisp :tangle yes
+  (use-package org-bullets
+    :config
+    (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+  ;; (setq org-ellipsis "⤵")
+  (setq org-pretty-entities t) ;; Prettify Org files by including UTF-8 characters
+#+end_src
+
+Support shift selecting blocks of text as well, as described [[https://orgmode.org/manual/Conflicts.html][here]].
+#+begin_src emacs-lisp :tangle yes
+  (setq org-support-shift-select t)
+#+end_src
+
+Next up is changing the look of source code blocks
+#+begin_src emacs-lisp :tangle yes
+  (setq org-src-fontify-natively t)
+#+end_src
+
+Change the default behavior of Org timestamps to actually note the time and date when
+logging =TODO='s.
+#+begin_src emacs-lisp :tangle yes
+  (setq org-log-done t)
+#+end_src
+
+Define new [[https://orgmode.org/manual/Workflow-states.html][TODO keywords as workflow states]], and [[https://orgmode.org/manual/Fast-access-to-TODO-states.html][assign keys for single-letter access.]]
+#+begin_src emacs-lisp :tangle yes
+  (setq org-todo-keywords
+        '((sequence "TODO(t)" "IN PROGRESS(p)" "|" "DONE(d)" "CANCELED(c)")))
+#+end_src
+Set their colors.
+#+begin_src emacs-lisp :tangle yes
+  (setq org-todo-keyword-faces
+        '(("TODO" . "goldenrod3")
+          ("IN PROGRESS" . "mediumseagreen")
+          ("CANCELED" . org-warning)))
+#+end_src
+
+Org links are by default opened in another window (i.e. it splits the current window in
+2), which I think is undesired in many cases other than just quickly checking the file
+out. To change this default behavior, we need to change the value of
+=org-link-frame-setup=
+#+begin_src emacs-lisp :tangle yes
+  (add-to-list 'org-link-frame-setup '(file . find-file))
+#+end_src
+
+*** Filling and unfilling regions
+It is inconvenient to have to =M-x auto-fill-mode= every time you open an Org
+file. However, line wrapping (not only visually line wrapping, as when using
+=visual-line-mode=) is basically a must. Therefore, we add a hook that enables this every
+time we open an Org file.
+#+begin_src emacs-lisp :tangle yes
+  (add-hook 'org-mode-hook #'auto-fill-mode)
+  (add-hook 'org-mode-hook #'visual-line-mode)
+#+end_src
+
+On the other end of the spectrum, often I find myself needing to paste some text into a
+box on a website where hard-coded newlines, resulting from wrapping, are quite
+jarring. Therefore one would like to "unfill" a region: enter [[https://github.com/purcell/unfill][=unfill=]].
+#+begin_src emacs-lisp :tangle yes
+  (use-package unfill)
+#+end_src
+
+** Julia 
+Nowdays I write essentially all my code in [[https://julialang.org/][Julia]] as it is very appealing for scientific
+computing. While in general the support for Julia is not as widespread as Python's, there
+is significant movement leading to a bunch of tools (for Emacs). The most important one is
+[[https://github.com/JuliaEditorSupport/julia-emacs][=julia-mode=]].
+#+begin_src emacs-lisp :tangle yes
+  (use-package julia-mode
+    :mode "\\.jl\\'"
+    :interpreter "julia"
+    :config
+    (eglot-jl-init)
+    ;; Specify the hook that connects =eglot=
+    :hook (julia-mode . eglot-ensure))
+#+end_src
+
+The Julia REPL is quite a useful tool when writing and debugging, so we want to
+add support for a good REPL in Emacs. Sadly, [[https://github.com/tpapp/julia-repl][julia-repl]] is not not available
+through MELPA, so we cannot use =use-package= to automate the installation but
+have to resort to manually downloading the relevant =elisp= files.
+#+begin_src emacs-lisp :tangle yes
+  (use-package julia-repl
+    :init (setq julia-repl-switches "--project=@.")
+    :hook (julia-mode . julia-repl-mode)
+    :config
+    ;; Set the terminal backend
+    (julia-repl-set-terminal-backend 'vterm)
+    ;; Set the number of threads
+    (setenv "JULIA_NUM_THREADS" "8")
+    ;; Keybindings for quickly sending code to the REPL
+    (define-key julia-repl-mode-map (kbd "<M-RET>") 'my/julia-repl-send-cell))
+#+end_src
+
+#+begin_src emacs-lisp :tangle yes
+  (defun my/julia-repl-send-cell() 
+    ;; "Send the current julia cell (delimited by #/) to the julia shell"
+    (interactive)
+    (save-excursion
+      (setq cell-begin (if (re-search-backward "^#/" nil t) (point) (point-min))))
+    (save-excursion
+      (setq cell-end (if (re-search-forward "^#/" nil t) (point) (point-max))))
+    (set-mark cell-begin)
+    (goto-char cell-end)
+    (julia-repl-send-region-or-line)
+    (next-line))
+#+end_src
+
+** Lua configuration
+Although I do not use Lua, [[https://wezfurlong.org/wezterm/][wezterm]] (my current terminal emulator) is configured
+using a Lua file. Therefore it is just convenient to add =lua-mode= for some
+basic syntax highlighting.
+#+begin_src emacs-lisp :tangle yes
+  (use-package lua-mode
+    :mode "\\.lua\\'"
+    :interpreter "lua"
+    :init
+    (add-to-list 'auto-mode-alist '("\\.lua\\'" . lua-mode)))
+#+end_src

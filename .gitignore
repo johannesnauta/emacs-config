@@ -71,3 +71,8 @@ config.el
 /recentf
 /.lsp-session-v1
 /eln-cache/
+
+# temporary straight
+.straight.emacs.d/straight/*
+.straight.emacs.d/eln-cache/*
+.straight.emacs.d/elpa/*
