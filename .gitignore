@@ -76,3 +76,5 @@ config.el
 .straight.emacs.d/straight/*
 .straight.emacs.d/eln-cache/*
 .straight.emacs.d/elpa/*
+/straight/
+/projects
