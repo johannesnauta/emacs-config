@@ -1,15 +1,40 @@
-(org-babel-load-file "~/.emacs.d/config.org")
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(gnu-elpa-keyring-update devil cmake-mode zenburn-theme yasnippet-snippets which-key vterm vmd-mode vertico use-package poke-line ox-pandoc org-roam org-fragtog org-bullets orderless minions markdown-preview-mode marginalia magit lua-mode lsp-latex lsp-julia lambda-line julia-repl jedi hydra exec-path-from-shell esup emojify diminish dashboard company citar-embark bug-hunter avy autothemer auctex all-the-icons))
- '(warning-suppress-log-types '((comp))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name
+        "straight/repos/straight.el/bootstrap.el"
+        (or (bound-and-true-p straight-base-dir)
+            user-emacs-directory)))
+      (bootstrap-version 7))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
+;; Load Org really early to avoid =org-babel-load-file= to use the built-in version
+(straight-use-package 'org)
+(org-babel-load-file (expand-file-name "config.org" "~/.emacs.d"))
+
+(defun hack-one-local-variable (var val)
+  "Set local variable VAR with value VAL.
+If VAR is `mode', call `VAL-mode' as a function unless it's
+already the major mode."
+  (pcase var
+    ('mode
+     (let ((mode (intern (concat (downcase (symbol-name val))
+                                 "-mode"))))
+       (set-auto-mode-0 mode t)))
+    ('eval
+     (pcase val
+       (`(add-hook ',hook . ,_) (hack-one-local-variable--obsolete hook)))
+     (save-excursion (eval val t)))
+    (_
+     (hack-one-local-variable--obsolete var)
+     ;; Make sure the string has no text properties.
+     ;; Some text properties can get evaluated in various ways,
+     ;; so it is risky to put them on with a local variable list.
+     (if (stringp val)
+         (set-text-properties 0 (length val) nil val))
+     (set (make-local-variable var) val))))
