@@ -568,7 +568,10 @@ writing an formatting TeX files in Emacs.
 
 #+begin_src emacs-lisp :tangle yes
   (use-package tex
-    :straight auctex
+    :straight (auctex
+               :host nil
+               :type git
+               :repo "https://git.savannah.gnu.org/git/auctex.git")
     :defer t
     :config
     (setq-default TeX-master nil)
@@ -589,30 +592,6 @@ writing an formatting TeX files in Emacs.
            (LaTeX-mode . eglot-ensure)                ;; Turn on eglot (LSP)
            (LaTeX-mode . TeX-source-correlate-mode)   ;; Correlated PDF and tex file       
            (TeX-after-compilation-finished-functions . TeX-revert-document-buffer)))
-#+end_src
-
-#+begin_src emacs-lisp :tangle yes
-  (defun hack-one-local-variable (var val)
-    "Set local variable VAR with value VAL.
-  If VAR is `mode', call `VAL-mode' as a function unless it's
-  already the major mode."
-    (pcase var
-      ('mode
-       (let ((mode (intern (concat (downcase (symbol-name val))
-                                   "-mode"))))
-         (set-auto-mode-0 mode t)))
-      ('eval
-       (pcase val
-         (`(add-hook ',hook . ,_) (hack-one-local-variable--obsolete hook)))
-       (save-excursion (eval val t)))
-      (_
-       (hack-one-local-variable--obsolete var)
-       ;; Make sure the string has no text properties.
-       ;; Some text properties can get evaluated in various ways,
-       ;; so it is risky to put them on with a local variable list.
-       (if (stringp val)
-           (set-text-properties 0 (length val) nil val))
-       (set (make-local-variable var) val))))
 #+end_src
 
 *** Using arara
