@@ -51,8 +51,11 @@ manager --- =straight.el= is!), but it is widely used and quite useful, so we wo
 to integrate these tools. Luckily, this is easy:
 #+begin_src emacs-lisp :tangle yes
   (straight-use-package 'use-package)
-  (setq straight-use-package-by-default t)
-  ;; (setq debug-on-error t)
+  ;; (setq straight-use-package-by-default t)
+  (use-package straight
+    :custom
+    (straight-use-package-by-default t))
+  (setq debug-on-error t)
 #+end_src
   
 * Emacs default behavior
@@ -153,7 +156,7 @@ If you wish, you can also tell Emacs how many versions you wish to keep, but I
 just keep with the defaults (2) for now.
 #+begin_src emacs-lisp :tangle yes
   (setq backup-directory-alist '(("." . "~/.emacs.d/backup"))
-        backup-by-copying t    ; Don't delink hardlinks
+        backup-by-copying t    ; Do not delink hardlinks
         version-control t      ; Use version numbers on backups
         delete-old-versions t  ; Automatically delete excess backups
         ;; kept-new-versions 5    ; how many of the newest versions to keep
@@ -164,13 +167,18 @@ just keep with the defaults (2) for now.
 * Fonts
 A sensible font is important, so set it here. Note that the font needs to be installed
 seperately in the distro of choice. After installing, simply select the desired font. I
-change the height a bit as I find the default height to be slighly too large.
+change the height a bit as I find the default height to be slighly too large. 
 #+begin_src emacs-lisp :tangle yes
   ;; Font and font size
   ;; (set-face-attribute 'default nil :family "Roboto Mono Medium" :height 115)
   ;; (set-face-attribute 'default nil :family "Iosevka" :height 115)
   ;; (set-face-attribute 'default nil :family "Commit Mono" :height 115)
-  (set-face-attribute 'default nil :family "Fira Code" :height 115)
+  ;; (set-face-attribute 'default nil :family "Fira Code" :height 115 :weight 'medium)
+  (set-face-attribute 'default nil :family "Monaspace Neon" :height 110 :weight 'medium)
+  ;; (set-face-attribute 'default nil :family "JetBrains Mono" :height 108 :weight 'normal)
+  ;; (set-face-attribute 'default nil :family "Julia Mono" :height 105 :weight 'medium)
+  ;; (set-frame-font "Fira Code" nil t)
+  (setq-default line-spacing 0.15)
 #+end_src
 
 * Ergonomics: avoiding repetitive strain injuries
@@ -237,7 +245,8 @@ there that is super easy on the eyes and has pastel colors!
     (dashboard-setup-startup-hook)
     ;; Set the banner
     (setq dashboard-startup-banner 'logo)
-    ;; Vertically center content
+    ;; Center content
+    (setq dashboard-center-content t)
     (setq dashboard-vertically-center-content t)
     ;; Customize widgets
     (setq dashboard-items '((recents . 7)
@@ -433,6 +442,7 @@ rarely used features that Git entails. In my opinion, it is one of the best pack
 has and I use it frequently and happily.
 #+begin_src emacs-lisp :tangle yes
   (use-package magit
+    :defer t
     :config
     (setq magit-display-buffer-function 'magit-display-buffer-fullframe-status-v1)
     (setq magit-bury-buffer-function 'magit-restore-window-configuration))
@@ -454,6 +464,7 @@ merge conflicts.
 #+begin_src emacs-lisp :tangle yes
   ;; Gracefully yoinked from https://github.com/alphapapa/unpackaged.el#hydra 
   (use-package smerge-mode
+    :defer t
     :config
     (defhydra smerge-hydra
       (:color pink :hint nil :post (smerge-auto-leave))
@@ -505,65 +516,11 @@ Snippets themselves should also be included in this repository, see the file:sni
 directory. So you can change them if you so desire.
 #+begin_src emacs-lisp :tangle yes
   (use-package yasnippet
-    :hook (prog-mode . yas-minor-mode))
-  ;; (LaTeX-mode . yas-minor-mode))
+    :hook ((prog-mode . yas-minor-mode)
+           (LaTeX-mode . yas-minor-mode)))
   (use-package yasnippet-snippets
     :config
     (yasnippet-snippets-initialize))
-#+end_src
-
-* LSP: gotta code fast
-Emacs has two major LSP providers, =lsp-mode= and =eglot=. As =eglot= will be in Emacs'
-core (from v29 onwards), and as I have found =lsp-mode= to come with some
-not-so-easy-to-solve issues with =julia=, I have chosen =eglot=.
-
-** Eglot
-#+begin_src emacs-lisp :tangle yes
-  (use-package eglot
-    :config
-    (setq eglot-autoshutdown t)
-    (setq eldoc-echo-area-use-multiline-p nil)
-    (put 'eglot-note 'flymake-overlay-control nil)
-    (put 'eglot-warning 'flymake-overlay-control nil)
-    (put 'eglot-error 'flymake-overlay-control nil))
-#+end_src
-
-** Autocompletion
-[[https://company-mode.github.io/][Company]] (COMPletion ANYwhere) is a text completion framework for Emacs. It pops up a small
-UI that shows you candidates for the symbols you have currently typed, making development
-much faster and avoid spelling mistakes, e.g. in function names. It works with =eglot= or
-with snippets (when configured).
-#+begin_src emacs-lisp :tangle yes
-  (use-package company
-    :hook ((eglot-managed-mode . company-mode))
-    :config
-    (setq company-idle-delay 0.01)
-    (setq company-minimum-prefix-length 2)
-    (setq company-backends '((
-                              company-yasnippet
-                              company-capf
-                              company-dabbrev-code
-                              company-files
-                              company-dabbrev)))
-    )
-#+end_src
-
-** Specify languages
-For =eglot= to function, you need to install the language server for the specific language
-that you are interested in. Below, the language servers that I use will be installed.
-
-*Supported languages*
-1. =julia=
-2. ...
-
-*** Julia
-The timeout can be configured. It will most likely need to be large the first time
-=eglot-jl= is invoked, as the language server will need to be installed. Afterwards the
-timeout can be adjusted when desired.
-#+begin_src emacs-lisp :tangle yes
-  (use-package eglot-jl
-    :config
-    (setq eglot-connect-timeout 10000))
 #+end_src
 
 * Specific enrichtments: mode-specific configurations
@@ -581,6 +538,7 @@ writing an formatting TeX files in Emacs.
                :host nil
                :type git
                :repo "https://git.savannah.gnu.org/git/auctex.git")
+    :defer t
     :config
     (setq-default TeX-master nil)
     (setq TeX-auto-save t
@@ -755,7 +713,7 @@ have to resort to manually downloading the relevant =elisp= files.
     (define-key julia-repl-mode-map (kbd "<M-RET>") 'my/julia-repl-send-cell))
 #+end_src
 
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp :tangle no
   (defun my/julia-repl-send-cell() 
     ;; "Send the current julia cell (delimited by #/) to the julia shell"
     (interactive)
@@ -775,8 +733,65 @@ using a Lua file. Therefore it is just convenient to add =lua-mode= for some
 basic syntax highlighting.
 #+begin_src emacs-lisp :tangle yes
   (use-package lua-mode
+    :defer t
     :mode "\\.lua\\'"
     :interpreter "lua"
     :init
     (add-to-list 'auto-mode-alist '("\\.lua\\'" . lua-mode)))
+#+end_src
+
+* LSP: gotta code fast
+Emacs has two major LSP providers, =lsp-mode= and =eglot=. As =eglot= will be in Emacs'
+core (from v29 onwards), and as I have found =lsp-mode= to come with some
+not-so-easy-to-solve issues with =julia=, I have chosen =eglot=.
+
+** Eglot
+#+begin_src emacs-lisp :tangle yes
+  (use-package eglot
+    :defer t
+    :config
+    (setq eglot-autoshutdown t)
+    (setq eldoc-echo-area-use-multiline-p nil)
+    (put 'eglot-note 'flymake-overlay-control nil)
+    (put 'eglot-warning 'flymake-overlay-control nil)
+    (put 'eglot-error 'flymake-overlay-control nil))
+#+end_src
+
+** Autocompletion
+[[https://company-mode.github.io/][Company]] (COMPletion ANYwhere) is a text completion framework for Emacs. It pops up a small
+UI that shows you candidates for the symbols you have currently typed, making development
+much faster and avoid spelling mistakes, e.g. in function names. It works with =eglot= or
+with snippets (when configured).
+#+begin_src emacs-lisp :tangle yes
+  (use-package company
+    :hook ((eglot-managed-mode . company-mode))
+    :config
+    (setq company-idle-delay 0.01)
+    (setq company-minimum-prefix-length 2)
+    (setq company-backends '((
+                              company-yasnippet
+                              company-capf
+                              company-dabbrev-code
+                              company-files
+                              company-dabbrev)))
+    )
+#+end_src
+
+** Specify languages
+For =eglot= to function, you need to install the language server for the specific language
+that you are interested in. Below, the language servers that I use will be installed.
+
+*Supported languages*
+1. =julia=
+2. ...
+
+*** Julia
+The timeout can be configured. It will most likely need to be large the first time
+=eglot-jl= is invoked, as the language server will need to be installed. Afterwards the
+timeout can be adjusted when desired.
+#+begin_src emacs-lisp :tangle yes
+  (use-package eglot-jl
+    :defer t
+    :config
+    (setq eglot-connect-timeout 10000))
 #+end_src
