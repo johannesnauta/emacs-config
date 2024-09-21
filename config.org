@@ -21,6 +21,15 @@ Welcome to my literate Emacs configuration written in Org.
   package-depency hell is something one wishes to avoid at all costs, and =straight.el=
   provides a way to avoid it.
 
+** First things first
+Inhibit some messages showing up
+#+begin_src emacs-lisp :tangle yes
+  (let ((inhibit-message t))
+    (recentf-mode 1))
+  (setq inhibit-startup-message t)
+  (setq inhibit-startup-echo-area-message t)
+#+end_src
+
 * =straight.el=: The package manager
 Following the documentation, we need the following bootstrap code
 #+begin_src emacs-lisp :tangle init.el
@@ -74,10 +83,17 @@ the shell.
 #+end_src
 
 ** Emacs server
-Start a server for other processes to attach to
-#+begin_src emacs-lisp :tangle yes
+Start a server for other processes to attach to.
+[update] We actually, probably, do not want to do this, as we will most likely want to
+start an Emacs daemon any ways. This daemon is the server, so we do not need to start yet
+another one.
+#+begin_src emacs-lisp :tangle no
   (server-start)
 #+end_src
+#+begin_src emacs-lisp :tangle yes
+  (setq server-client-instructions nil)
+#+end_src
+
 
 ** Increase amount of data which Emacs reads from processes
 Standard Emacs read cache default size is (only) 4k, so change it here, say to 1MB.
@@ -173,7 +189,7 @@ change the height a bit as I find the default height to be slighly too large.
   ;; (set-face-attribute 'default nil :family "Roboto Mono Medium" :height 115)
   ;; (set-face-attribute 'default nil :family "Iosevka" :height 115)
   ;; (set-face-attribute 'default nil :family "Commit Mono" :height 115)
-  ;; (set-face-attribute 'default nil :family "Fira Code" :height 115 :weight 'medium)
+  ;; (set-face-attribute 'default nil :family "Fira Code" :height 110 :weight 'normal)
   (set-face-attribute 'default nil :family "Monaspace Neon" :height 110 :weight 'medium)
   ;; (set-face-attribute 'default nil :family "JetBrains Mono" :height 108 :weight 'normal)
   ;; (set-face-attribute 'default nil :family "Julia Mono" :height 105 :weight 'medium)
@@ -232,11 +248,21 @@ theme that better suits your needs.
 urn-emacs][Zenburn]] for Emacs is a direct port of the Zenburn theme originally created for
 vim. I (and others) think it is one of the best low contrast color themes out
 there that is super easy on the eyes and has pastel colors!
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp :tangle no
   (use-package zenburn-theme
     :config
     (load-theme 'zenburn t))
 #+end_src
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package catppuccin-theme
+    :config
+    (setq catppuccin-flavor 'frappe)
+    (load-theme 'catppuccin :no-confirm))
+#+end_src
+
+#+RESULTS:
+: t
 
 *** The startup screen
 #+begin_src emacs-lisp :tangle yes
@@ -244,7 +270,8 @@ there that is super easy on the eyes and has pastel colors!
     :config
     (dashboard-setup-startup-hook)
     ;; Set the banner
-    (setq dashboard-startup-banner 'logo)
+    ;; (setq dashboard-startup-banner 'logo)
+    (setq dashboard-startup-banner "~/.emacs.d/themes/banners/tree-sitter-xsmall.png")
     ;; Center content
     (setq dashboard-center-content t)
     (setq dashboard-vertically-center-content t)
@@ -262,7 +289,10 @@ there that is super easy on the eyes and has pastel colors!
                                 dashboard-insert-newline
                                 dashboard-insert-init-info
                                 dashboard-insert-items
-                                dashboard-insert-newline)))
+                                dashboard-insert-newline))
+    ;; Go to buffer -- i.e. when connecting as client
+    (when (daemonp)
+      (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))))
 #+end_src
 
 *** The mode line
@@ -353,6 +383,10 @@ default completion system. Simple, yet powerful.
   (use-package vertico
     :config
     (vertico-mode))
+#+end_src
+
+#+begin_src emacs-lisp :tangle yes
+  (setq completion-styles '(hotfuzz))
 #+end_src
 
 And let =vertico= persist the history over Emacs restarts, so we can, if we want, quickly
@@ -517,6 +551,7 @@ directory. So you can change them if you so desire.
 #+begin_src emacs-lisp :tangle yes
   (use-package yasnippet
     :hook ((prog-mode . yas-minor-mode)
+           (org-mode . yas-minor-mode)
            (LaTeX-mode . yas-minor-mode)))
   (use-package yasnippet-snippets
     :config
@@ -686,7 +721,7 @@ Nowdays I write essentially all my code in [[https://julialang.org/][Julia]] as 
 computing. While in general the support for Julia is not as widespread as Python's, there
 is significant movement leading to a bunch of tools (for Emacs). The most important one is
 [[https://github.com/JuliaEditorSupport/julia-emacs][=julia-mode=]].
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp :tangle no
   (use-package julia-mode
     :mode "\\.jl\\'"
     :interpreter "julia"
@@ -695,6 +730,19 @@ is significant movement leading to a bunch of tools (for Emacs). The most import
     ;; Specify the hook that connects =eglot=
     :hook (julia-mode . eglot-ensure))
 #+end_src
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package julia-ts-mode
+    :ensure t
+    :mode "\\.jl$"
+    :interpreter "julia"
+    :config
+    (eglot-jl-init)
+    :hook (julia-ts-mode . eglot-ensure))
+#+end_src
+
+#+RESULTS:
+: ((\.jl . julia-ts-mode) (\.lua\' . lua-mode) (\.jl$ . julia-ts-mode) (\.jl\' . julia-ts-mode) (\.jl\' . julia-mode) (\.hva\' . LaTeX-mode) (/git-rebase-todo\' . git-rebase-mode) (\.gpg\(~\|\.~[0-9]+~\)?\' nil epa-file) (\.elc\' . elisp-byte-code-mode) (\.zst\' nil jka-compr) (\.dz\' nil jka-compr) (\.xz\' nil jka-compr) (\.lzma\' nil jka-compr) (\.lz\' nil jka-compr) (\.g?z\' nil jka-compr) (\.bz2\' nil jka-compr) (\.Z\' nil jka-compr) (\.vr[hi]?\' . vera-mode) (\(?:\.\(?:rbw?\|ru\|rake\|thor\|jbuilder\|rabl\|gemspec\|podspec\)\|/\(?:Gem\|Rake\|Cap\|Thor\|Puppet\|Berks\|Brew\|Vagrant\|Guard\|Pod\)file\)\' . ruby-mode) (\.re?st\' . rst-mode) (\.py[iw]?\' . python-mode) (\.m\' . octave-maybe-mode) (\.less\' . less-css-mode) (\.scss\' . scss-mode) (\.cs\' . csharp-mode) (\.awk\' . awk-mode) (\.\(u?lpc\|pike\|pmod\(\.in\)?\)\' . pike-mode) (\.idl\' . idl-mode) (\.java\' . java-mode) (\.m\' . objc-mode) (\.ii\' . c++-mode) (\.i\' . c-mode) (\.lex\' . c-mode) (\.y\(acc\)?\' . c-mode) (\.h\' . c-or-c++-mode) (\.c\' . c-mode) (\.\(CC?\|HH?\)\' . c++-mode) (\.[ch]\(pp\|xx\|\+\+\)\' . c++-mode) (\.\(cc\|hh\)\' . c++-mode) (\.\(bat\|cmd\)\' . bat-mode) (\.[sx]?html?\(\.[a-zA-Z_]+\)?\' . mhtml-mode) (\.svgz?\' . image-mode) (\.svgz?\' . xml-mode) (\.x[bp]m\' . image-mode) (\.x[bp]m\' . c-mode) (\.p[bpgn]m\' . image-mode) (\.tiff?\' . image-mode) (\.gif\' . image-mode) (\.png\' . image-mode) (\.jpe?g\' . image-mode) (\.webp\' . image-mode) (\.te?xt\' . text-mode) (\.[tT]e[xX]\' . tex-mode) (\.ins\' . tex-mode) (\.ltx\' . latex-mode) (\.dtx\' . doctex-mode) (\.org\' . org-mode) (\.dir-locals\(?:-2\)?\.el\' . lisp-data-mode) (\.eld\' . lisp-data-mode) (eww-bookmarks\' . lisp-data-mode) (tramp\' . lisp-data-mode) (/archive-contents\' . lisp-data-mode) (places\' . lisp-data-mode) (\.emacs-places\' . lisp-data-mode) (\.el\' . emacs-lisp-mode) (Project\.ede\' . emacs-lisp-mode) (\.\(scm\|sls\|sld\|stk\|ss\|sch\)\' . scheme-mode) (\.l\' . lisp-mode) (\.li?sp\' . lisp-mode) (\.[fF]\' . fortran-mode) (\.for\' . fortran-mode) (\.p\' . pascal-mode) (\.pas\' . pascal-mode) (\.\(dpr\|DPR\)\' . delphi-mode) (\.\([pP]\([Llm]\|erl\|od\)\|al\)\' . perl-mode) (Imakefile\' . makefile-imake-mode) (Makeppfile\(?:\.mk\)?\' . makefile-makepp-mode) (\.makepp\' . makefile-makepp-mode) (\.mk\' . makefile-gmake-mode) (\.make\' . makefile-gmake-mode) ([Mm]akefile\' . makefile-gmake-mode) (\.am\' . makefile-automake-mode) (\.texinfo\' . texinfo-mode) (\.te?xi\' . texinfo-mode) (\.[sS]\' . asm-mode) (\.asm\' . asm-mode) (\.css\' . css-mode) (\.mixal\' . mixal-mode) (\.gcov\' . compilation-mode) (/\.[a-z0-9-]*gdbinit . gdb-script-mode) (-gdb\.gdb . gdb-script-mode) ([cC]hange\.?[lL]og?\' . change-log-mode) ([cC]hange[lL]og[-.][0-9]+\' . change-log-mode) (\$CHANGE_LOG\$\.TXT . change-log-mode) (\.scm\.[0-9]*\' . scheme-mode) (\.[ckz]?sh\'\|\.shar\'\|/\.z?profile\' . sh-mode) (\.bash\' . sh-mode) (/PKGBUILD\' . sh-mode) (\(/\|\`\)\.\(bash_\(profile\|history\|log\(in\|out\)\)\|z?log\(in\|out\)\)\' . sh-mode) (\(/\|\`\)\.\(shrc\|zshrc\|m?kshrc\|bashrc\|t?cshrc\|esrc\)\' . sh-mode) (\(/\|\`\)\.\([kz]shenv\|xinitrc\|startxrc\|xsession\)\' . sh-mode) (\.m?spec\' . sh-mode) (\.m[mes]\' . nroff-mode) (\.man\' . nroff-mode) (\.sty\' . latex-mode) (\.cl[so]\' . latex-mode) (\.bbl\' . latex-mode) (\.bib\' . bibtex-mode) (\.bst\' . bibtex-style-mode) (\.sql\' . sql-mode) (\(acinclude\|aclocal\|acsite\)\.m4\' . autoconf-mode) (\.m[4c]\' . m4-mode) (\.mf\' . metafont-mode) (\.mp\' . metapost-mode) (\.vhdl?\' . vhdl-mode) (\.article\' . text-mode) (\.letter\' . text-mode) (\.i?tcl\' . tcl-mode) (\.exp\' . tcl-mode) (\.itk\' . tcl-mode) (\.icn\' . icon-mode) (\.sim\' . simula-mode) (\.mss\' . scribe-mode) (\.f9[05]\' . f90-mode) (\.f0[38]\' . f90-mode) (\.indent\.pro\' . fundamental-mode) (\.\(pro\|PRO\)\' . idlwave-mode) (\.srt\' . srecode-template-mode) (\.prolog\' . prolog-mode) (\.tar\' . tar-mode) (\.\(arc\|zip\|lzh\|lha\|zoo\|[jew]ar\|xpi\|rar\|cbr\|7z\|squashfs\|ARC\|ZIP\|LZH\|LHA\|ZOO\|[JEW]AR\|XPI\|RAR\|CBR\|7Z\|SQUASHFS\)\' . archive-mode) (\.oxt\' . archive-mode) (\.\(deb\|[oi]pk\)\' . archive-mode) (\`/tmp/Re . text-mode) (/Message[0-9]*\' . text-mode) (\`/tmp/fol/ . text-mode) (\.oak\' . scheme-mode) (\.sgml?\' . sgml-mode) (\.x[ms]l\' . xml-mode) (\.dbk\' . xml-mode) (\.dtd\' . sgml-mode) (\.ds\(ss\)?l\' . dsssl-mode) (\.js[mx]?\' . javascript-mode) (\.har\' . javascript-mode) (\.json\' . js-json-mode) (\.[ds]?va?h?\' . verilog-mode) (\.by\' . bovine-grammar-mode) (\.wy\' . wisent-grammar-mode) (\.erts\' . erts-mode) ([:/\]\..*\(emacs\|gnus\|viper\)\' . emacs-lisp-mode) (\`\..*emacs\' . emacs-lisp-mode) ([:/]_emacs\' . emacs-lisp-mode) (/crontab\.X*[0-9]+\' . shell-script-mode) (\.ml\' . lisp-mode) (\.ld[si]?\' . ld-script-mode) (ld\.?script\' . ld-script-mode) (\.xs\' . c-mode) (\.x[abdsru]?[cnw]?\' . ld-script-mode) (\.zone\' . dns-mode) (\.soa\' . dns-mode) (\.asd\' . lisp-mode) (\.\(asn\|mib\|smi\)\' . snmp-mode) (\.\(as\|mi\|sm\)2\' . snmpv2-mode) (\.\(diffs?\|patch\|rej\)\' . diff-mode) (\.\(dif\|pat\)\' . diff-mode) (\.[eE]?[pP][sS]\' . ps-mode) (\.\(?:PDF\|EPUB\|CBZ\|FB2\|O?XPS\|DVI\|OD[FGPST]\|DOCX\|XLSX?\|PPTX?\|pdf\|epub\|cbz\|fb2\|o?xps\|djvu\|dvi\|od[fgpst]\|docx\|xlsx?\|pptx?\)\' . doc-view-mode-maybe) (configure\.\(ac\|in\)\' . autoconf-mode) (\.s\(v\|iv\|ieve\)\' . sieve-mode) (BROWSE\' . ebrowse-tree-mode) (\.ebrowse\' . ebrowse-tree-mode) (#\*mail\* . mail-mode) (\.g\' . antlr-mode) (\.mod\' . m2-mode) (\.ses\' . ses-mode) (\.docbook\' . sgml-mode) (\.com\' . dcl-mode) (/config\.\(?:bat\|log\)\' . fundamental-mode) (/\.\(authinfo\|netrc\)\' . authinfo-mode) (\.\(?:[iI][nN][iI]\|[lL][sS][tT]\|[rR][eE][gG]\|[sS][yY][sS]\)\' . conf-mode) (\.la\' . conf-unix-mode) (\.ppd\' . conf-ppd-mode) (java.+\.conf\' . conf-javaprop-mode) (\.properties\(?:\.[a-zA-Z0-9._-]+\)?\' . conf-javaprop-mode) (\.toml\' . conf-toml-mode) (\.desktop\' . conf-desktop-mode) (/\.redshift\.conf\' . conf-windows-mode) (\`/etc/\(?:DIR_COLORS\|ethers\|.?fstab\|.*hosts\|lesskey\|login\.?de\(?:fs\|vperm\)\|magic\|mtab\|pam\.d/.*\|permissions\(?:\.d/.+\)?\|protocols\|rpc\|services\)\' . conf-space-mode) (\`/etc/\(?:acpid?/.+\|aliases\(?:\.d/.+\)?\|default/.+\|group-?\|hosts\..+\|inittab\|ksysguarddrc\|opera6rc\|passwd-?\|shadow-?\|sysconfig/.+\)\' . conf-mode) ([cC]hange[lL]og[-.][-0-9a-z]+\' . change-log-mode) (/\.?\(?:gitconfig\|gnokiirc\|hgrc\|kde.*rc\|mime\.types\|wgetrc\)\' . conf-mode) (/\.mailmap\' . conf-unix-mode) (/\.\(?:asound\|enigma\|fetchmail\|gltron\|gtk\|hxplayer\|mairix\|mbsync\|msmtp\|net\|neverball\|nvidia-settings-\|offlineimap\|qt/.+\|realplayer\|reportbug\|rtorrent\.\|screen\|scummvm\|sversion\|sylpheed/.+\|xmp\)rc\' . conf-mode) (/\.\(?:gdbtkinit\|grip\|mpdconf\|notmuch-config\|orbital/.+txt\|rhosts\|tuxracer/options\)\' . conf-mode) (/\.?X\(?:default\|resource\|re\)s\> . conf-xdefaults-mode) (/X11.+app-defaults/\|\.ad\' . conf-xdefaults-mode) (/X11.+locale/.+/Compose\' . conf-colon-mode) (/X11.+locale/compose\.dir\' . conf-javaprop-mode) (\.~?[0-9]+\.[0-9][-.0-9]*~?\' nil t) (\.\(?:orig\|in\|[bB][aA][kK]\)\' nil t) ([/.]c\(?:on\)?f\(?:i?g\)?\(?:\.[a-zA-Z0-9._-]+\)?\' . conf-mode-maybe) (\.[1-9]\' . nroff-mode) (\.art\' . image-mode) (\.avs\' . image-mode) (\.bmp\' . image-mode) (\.cmyk\' . image-mode) (\.cmyka\' . image-mode) (\.crw\' . image-mode) (\.dcr\' . image-mode) (\.dcx\' . image-mode) (\.dng\' . image-mode) (\.dpx\' . image-mode) (\.fax\' . image-mode) (\.heic\' . image-mode) (\.hrz\' . image-mode) (\.icb\' . image-mode) (\.icc\' . image-mode) (\.icm\' . image-mode) (\.ico\' . image-mode) (\.icon\' . image-mode) (\.jbg\' . image-mode) (\.jbig\' . image-mode) (\.jng\' . image-mode) (\.jnx\' . image-mode) (\.miff\' . image-mode) (\.mng\' . image-mode) (\.mvg\' . image-mode) (\.otb\' . image-mode) (\.p7\' . image-mode) (\.pcx\' . image-mode) (\.pdb\' . image-mode) (\.pfa\' . image-mode) (\.pfb\' . image-mode) (\.picon\' . image-mode) (\.pict\' . image-mode) (\.rgb\' . image-mode) (\.rgba\' . image-mode) (\.tga\' . image-mode) (\.wbmp\' . image-mode) (\.webp\' . image-mode) (\.wmf\' . image-mode) (\.wpg\' . image-mode) (\.xcf\' . image-mode) (\.xmp\' . image-mode) (\.xwd\' . image-mode) (\.yuv\' . image-mode) (\.tgz\' . tar-mode) (\.tbz2?\' . tar-mode) (\.txz\' . tar-mode) (\.tzst\' . tar-mode) (\.drv\' . LaTeX-mode))
 
 The Julia REPL is quite a useful tool when writing and debugging, so we want to
 add support for a good REPL in Emacs. Sadly, [[https://github.com/tpapp/julia-repl][julia-repl]] is not not available
@@ -740,6 +788,43 @@ basic syntax highlighting.
     (add-to-list 'auto-mode-alist '("\\.lua\\'" . lua-mode)))
 #+end_src
 
+* tree-sitter: becoming a syntax tree hugger
+#+begin_src emacs-lisp :tangle yes
+  (use-package treesit-auto
+    :custom
+    (treesit-auto-install 'prompt)
+    :config
+    (treesit-auto-add-to-auto-mode-alist 'all)
+    (global-treesit-auto-mode))
+#+end_src
+
+#+begin_src emacs-lisp :tangle no
+  (setq julia-treesit-auto-config
+        (make-treesit-auto-recipe
+         :lang 'julia
+         :ts-mode 'julia-ts-mode
+         :remap '(julia-mode)
+         :url ""
+         :revision "master/5df0420f792086ae8c3536bbe012bca51e3c7133"
+         :ext "\\.jl\\'"))
+  (add-to-list 'treesit-auto-recipe-list julia-treesit-auto-config)
+#+end_src
+
+#+RESULTS:
+| #s(treesit-auto-recipe julia julia-ts-mode (julia-mode) nil  master/5df0420f792086ae8c3536bbe012bca51e3c7133 nil nil nil \.jl\') | #s(treesit-auto-recipe julia julia-ts-mode (julia-mode) nil  5df0420f792086ae8c3536bbe012bca51e3c7133 nil nil nil \.jl\') | #s(treesit-auto-recipe awk awk-ts-mode awk-mode nil https://github.com/Beaglefoot/tree-sitter-awk nil nil nil nil \.awk\') | #s(treesit-auto-recipe bash bash-ts-mode sh-mode nil https://github.com/tree-sitter/tree-sitter-bash nil nil nil nil \.sh\') | #s(treesit-auto-recipe bibtex bibtex-ts-mode bibtex-mode nil https://github.com/latex-lsp/tree-sitter-bibtex nil nil nil nil \.bib\') | #s(treesit-auto-recipe blueprint blueprint-ts-mode blueprint-mode nil https://github.com/huanie/tree-sitter-blueprint nil nil nil nil \.blp\') | #s(treesit-auto-recipe c c-ts-mode c-mode nil https://github.com/tree-sitter/tree-sitter-c nil nil nil nil \.c\') | #s(treesit-auto-recipe c-sharp csharp-ts-mode csharp-mode nil https://github.com/tree-sitter/tree-sitter-c-sharp nil nil nil nil \.cs\') | #s(treesit-auto-recipe clojure clojure-ts-mode (clojure-mode clojurescript-mode clojurec-mode) nil https://github.com/sogaiu/tree-sitter-clojure nil nil nil nil \.cljc?s?d?\') | #s(treesit-auto-recipe cmake cmake-ts-mode cmake-mode nil https://github.com/uyha/tree-sitter-cmake nil nil nil nil \.cmake\') | #s(treesit-auto-recipe commonlisp commonlisp-ts-mode common-lisp-mode nil https://github.com/tree-sitter-grammars/tree-sitter-commonlisp nil nil nil nil \.cl\') | #s(treesit-auto-recipe cpp c++-ts-mode c++-mode nil https://github.com/tree-sitter/tree-sitter-cpp nil nil nil nil \.cpp\') | #s(treesit-auto-recipe css css-ts-mode css-mode nil https://github.com/tree-sitter/tree-sitter-css nil nil nil nil \.css\') | #s(treesit-auto-recipe dart dart-ts-mode dart-mode nil https://github.com/ast-grep/tree-sitter-dart nil nil nil nil \.dart\') | #s(treesit-auto-recipe dockerfile dockerfile-ts-mode dockerfile-mode nil https://github.com/camdencheek/tree-sitter-dockerfile nil nil nil nil [/\]\(?:Containerfile\ | Dockerfile\)\(?:\.[^/\]*\)?\') | #s(treesit-auto-recipe elixir elixir-ts-mode elixir-mode heex https://github.com/elixir-lang/tree-sitter-elixir nil nil nil nil \.ex\') | #s(treesit-auto-recipe glsl glsl-ts-mode glsl-mode nil https://github.com/tree-sitter-grammars/tree-sitter-glsl nil nil nil nil nil) | #s(treesit-auto-recipe go go-ts-mode go-mode gomod https://github.com/tree-sitter/tree-sitter-go nil nil nil nil \.go\') | #s(treesit-auto-recipe gomod go-mod-ts-mode go-mod-mode go https://github.com/camdencheek/tree-sitter-go-mod nil nil nil nil go\.mod\') | #s(treesit-auto-recipe heex heex-ts-mode heex-mode nil https://github.com/phoenixframework/tree-sitter-heex nil nil nil nil \.heex\') | #s(treesit-auto-recipe html html-ts-mode (mhtml-mode sgml-mode) nil https://github.com/tree-sitter/tree-sitter-html nil nil nil nil \.html\') | #s(treesit-auto-recipe janet janet-ts-mode janet-mode nil https://github.com/sogaiu/tree-sitter-janet-simple nil nil nil nil \.janet\') | #s(treesit-auto-recipe java java-ts-mode java-mode nil https://github.com/tree-sitter/tree-sitter-java nil nil nil nil \.java\') | #s(treesit-auto-recipe javascript js-ts-mode (js-mode javascript-mode js2-mode) nil https://github.com/tree-sitter/tree-sitter-javascript master src nil nil \.js\') | #s(treesit-auto-recipe json json-ts-mode js-json-mode nil https://github.com/tree-sitter/tree-sitter-json nil nil nil nil \.json\') | #s(treesit-auto-recipe julia julia-ts-mode julia-mode nil https://github.com/tree-sitter/tree-sitter-julia nil nil nil nil \.jl\') | #s(treesit-auto-recipe kotlin kotlin-ts-mode kotlin-mode nil https://github.com/fwcd/tree-sitter-kotlin nil nil nil nil \.kts?\') | #s(treesit-auto-recipe latex latex-ts-mode latex-mode nil https://github.com/latex-lsp/tree-sitter-latex nil nil nil nil \.tex\') | #s(treesit-auto-recipe lua lua-ts-mode lua-mode nil https://github.com/tree-sitter-grammars/tree-sitter-lua nil nil nil nil \.lua\') | #s(treesit-auto-recipe magik magik-ts-mode magik-mode nil https://github.com/krn-robin/tree-sitter-magik nil nil nil nil \.magik\') | #s(treesit-auto-recipe make makefile-ts-mode makefile-mode nil https://github.com/tree-sitter-grammars/tree-sitter-make nil nil nil nil \([Mm]akefile\ | .*\.\(mk\ | make\)\)\') | #s(treesit-auto-recipe markdown markdown-ts-mode (poly-markdown-mode markdown-mode) nil https://github.com/tree-sitter-grammars/tree-sitter-markdown nil nil nil nil \.md\') | #s(treesit-auto-recipe nix nix-ts-mode nix-mode nil https://github.com/nix-community/tree-sitter-nix nil nil nil nil \.nix\') | #s(treesit-auto-recipe nu nushell-ts-mode nushell-mode nil https://github.com/nushell/tree-sitter-nu nil nil nil nil \.nu\') | #s(treesit-auto-recipe org org-ts-mode org-mode nil https://github.com/milisims/tree-sitter-org nil nil nil nil \.org\') | #s(treesit-auto-recipe perl perl-ts-mode perl-mode nil https://github.com/ganezdragon/tree-sitter-perl nil nil nil nil \.pl\') | #s(treesit-auto-recipe proto protobuf-ts-mode protobuf-mode nil https://github.com/mitchellh/tree-sitter-proto nil nil nil nil \.proto\') | #s(treesit-auto-recipe python python-ts-mode python-mode nil https://github.com/tree-sitter/tree-sitter-python nil nil nil nil \.py[iw]?\') | #s(treesit-auto-recipe r r-ts-mode ess-mode nil https://github.com/r-lib/tree-sitter-r nil nil nil nil \.r\') | #s(treesit-auto-recipe ruby ruby-ts-mode ruby-mode nil https://github.com/tree-sitter/tree-sitter-ruby nil nil nil nil \(?:\.\(?:rbw?\ | ru\ | rake\ | thor\ | jbuilder\ | rabl\ | gemspec\ | podspec\)\ | /\(?:Gem\ | Rake\ | Cap\ | Thor\ | Puppet\ | Berks\ | Brew\ | Vagrant\ | Guard\ | Pod\)file\)\') | #s(treesit-auto-recipe rust rust-ts-mode rust-mode nil https://github.com/tree-sitter/tree-sitter-rust nil nil nil nil \.rs\') | #s(treesit-auto-recipe scala scala-ts-mode scala-mode nil https://github.com/tree-sitter/tree-sitter-scala nil nil nil nil \.\(scala\ | sbt\)\') | #s(treesit-auto-recipe sql sql-ts-mode sql-mode nil https://github.com/DerekStride/tree-sitter-sql gh-pages nil nil nil \.sql\') | #s(treesit-auto-recipe surface surface-ts-mode surface-mode nil https://github.com/connorlay/tree-sitter-surface nil nil nil nil nil) | #s(treesit-auto-recipe toml toml-ts-mode (conf-toml-mode toml-mode) nil https://github.com/tree-sitter/tree-sitter-toml nil nil nil nil \.toml\') | #s(treesit-auto-recipe tsx tsx-ts-mode (typescript-tsx-mode) typescript https://github.com/tree-sitter/tree-sitter-typescript master tsx/src nil nil \.tsx\') | #s(treesit-auto-recipe typescript typescript-ts-mode typescript-mode tsx https://github.com/tree-sitter/tree-sitter-typescript master typescript/src nil nil \.ts\') | #s(treesit-auto-recipe typst typst-ts-mode typst-mode nil https://github.com/uben0/tree-sitter-typst master src nil nil \.typ\') | #s(treesit-auto-recipe verilog verilog-ts-mode verilog-mode nil https://github.com/gmlarumbe/tree-sitter-verilog nil nil nil nil \.s?vh?\') | #s(treesit-auto-recipe vhdl vhdl-ts-mode vhdl-mode nil https://github.com/alemuller/tree-sitter-vhdl nil nil nil nil \.vhdl?\') | #s(treesit-auto-recipe vue vue-ts-mode vue-mode nil https://github.com/tree-sitter-grammars/tree-sitter-vue nil nil nil nil \.vue\') | #s(treesit-auto-recipe wast wat-ts-wast-mode wat-mode nil https://github.com/wasm-lsp/tree-sitter-wasm nil wast/src nil nil \.wast\') | #s(treesit-auto-recipe wat wat-ts-mode wat-mode nil https://github.com/wasm-lsp/tree-sitter-wasm nil wat/src nil nil \.wat\') | #s(treesit-auto-recipe wgsl wgsl-ts-mode wgsl-mode nil https://github.com/mehmetoguzderin/tree-sitter-wgsl nil nil nil nil \.wgsl\') | #s(treesit-auto-recipe yaml yaml-ts-mode yaml-mode nil https://github.com/tree-sitter-grammars/tree-sitter-yaml nil nil nil nil \.ya?ml\') |
+
+#+begin_src emacs-lisp :tangle no
+  (setq treesit-language-source-alist
+        '((bash "https://github.com/tree-sitter/tree-sitter-bash")
+          (elisp "https://github.com/Wilfred/tree-sitter-elisp")
+          (julia "https://github.com/tree-sitter/tree-sitter-julia")))
+#+end_src
+
+#+RESULTS:
+| bash  | https://github.com/tree-sitter/tree-sitter-bash  |
+| elisp | https://github.com/Wilfred/tree-sitter-elisp     |
+| julia | https://github.com/tree-sitter/tree-sitter-julia |
+
 * LSP: gotta code fast
 Emacs has two major LSP providers, =lsp-mode= and =eglot=. As =eglot= will be in Emacs'
 core (from v29 onwards), and as I have found =lsp-mode= to come with some
@@ -748,10 +833,10 @@ not-so-easy-to-solve issues with =julia=, I have chosen =eglot=.
 ** Eglot
 #+begin_src emacs-lisp :tangle yes
   (use-package eglot
-    :defer t
     :config
     (setq eglot-autoshutdown t)
     (setq eldoc-echo-area-use-multiline-p nil)
+    (setq eglot-ignored-server-capabilites '(:inlayHintProvider))
     (put 'eglot-note 'flymake-overlay-control nil)
     (put 'eglot-warning 'flymake-overlay-control nil)
     (put 'eglot-error 'flymake-overlay-control nil))
@@ -764,18 +849,45 @@ much faster and avoid spelling mistakes, e.g. in function names. It works with =
 with snippets (when configured).
 #+begin_src emacs-lisp :tangle yes
   (use-package company
-    :hook ((eglot-managed-mode . company-mode))
     :config
-    (setq company-idle-delay 0.01)
+    (setq company-idle-delay 0.0)
     (setq company-minimum-prefix-length 2)
-    (setq company-backends '((
-                              company-yasnippet
+    (setq company-backends '((company-yasnippet
                               company-capf
                               company-dabbrev-code
-                              company-files
-                              company-dabbrev)))
-    )
+                              company-dabbrev
+                              company-files)))
+    :hook ((eglot-managed-mode . company-mode)))
 #+end_src
+
+#+RESULTS:
+| company-mode |
+
+While =company= is very useful, the suggestion it shows are sometimes very odd. I myself
+notice it a lot when working in =julia=. As any Unicode character is allowed, when wanting
+to type Greek symbols it often matches a whole bunch of Unicode characters. And even when
+there is a complete match, it is often hidden behind many undesirable characters. 
+While there might be an option out there that filters, or that increases complete matches
+to be more likely to appear close to the top of the suggestion, there might be a better
+and (conceptually) more easy way: =company-statistics=.
+The idea is simple: just remember a certain number of completions, and use their frequency
+to rank suggestion candidates. 
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package company-statistics
+    :defer t
+    :config
+    (let ((cache-dir (concat user-emacs-directory "caches/")))
+      ;; Create the directory if it doesn't exist
+      (unless (file-exists-p cache-dir)
+      (make-directory cache-dir t))
+      ;; Set the statistics file
+      (setq company-statistics-file (concat cache-dir "company-statistics-cache.el")))
+    :hook ((company-mode . company-statistics-mode)))
+#+end_src
+
+#+RESULTS:
+| company-statistics-mode | company-mode-set-explicitly |
 
 ** Specify languages
 For =eglot= to function, you need to install the language server for the specific language
@@ -789,9 +901,10 @@ that you are interested in. Below, the language servers that I use will be insta
 The timeout can be configured. It will most likely need to be large the first time
 =eglot-jl= is invoked, as the language server will need to be installed. Afterwards the
 timeout can be adjusted when desired.
+
 #+begin_src emacs-lisp :tangle yes
   (use-package eglot-jl
     :defer t
     :config
-    (setq eglot-connect-timeout 10000))
+    (setq eglot-connect-timeout 100000))
 #+end_src
