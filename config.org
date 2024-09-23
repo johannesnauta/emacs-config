@@ -94,11 +94,27 @@ another one.
   (setq server-client-instructions nil)
 #+end_src
 
-
 ** Increase amount of data which Emacs reads from processes
 Standard Emacs read cache default size is (only) 4k, so change it here, say to 1MB.
 #+begin_src emacs-lisp :tangle yes
   (setq read-process-output-max (* 1024 1024)) ;; 1mb
+#+end_src
+
+** Fonts
+A sensible font is important, so set it here. Note that the font needs to be installed
+seperately in the distro of choice. After installing, simply select the desired font. I
+change the height a bit as I find the default height to be slighly too large. 
+#+begin_src emacs-lisp :tangle yes
+  ;; Font and font size
+  ;; (set-face-attribute 'default nil :family "Roboto Mono Medium" :height 115)
+  ;; (set-face-attribute 'default nil :family "Iosevka" :height 115)
+  ;; (set-face-attribute 'default nil :family "Commit Mono" :height 115)
+  ;; (set-face-attribute 'default nil :family "Fira Code" :height 110 :weight 'normal)
+  (set-face-attribute 'default nil :family "Monaspace Neon" :height 110 :weight 'medium)
+  (setq-default line-spacing 0.15)
+  ;; (set-face-attribute 'default nil :family "JetBrains Mono" :height 108 :weight 'normal)
+  ;; (set-face-attribute 'default nil :family "Julia Mono" :height 105 :weight 'medium)
+  ;; (set-frame-font "Fira Code" nil t)
 #+end_src
 
 ** Sensible miscellaneous defaults
@@ -180,23 +196,6 @@ just keep with the defaults (2) for now.
         )
 #+end_src
 
-* Fonts
-A sensible font is important, so set it here. Note that the font needs to be installed
-seperately in the distro of choice. After installing, simply select the desired font. I
-change the height a bit as I find the default height to be slighly too large. 
-#+begin_src emacs-lisp :tangle yes
-  ;; Font and font size
-  ;; (set-face-attribute 'default nil :family "Roboto Mono Medium" :height 115)
-  ;; (set-face-attribute 'default nil :family "Iosevka" :height 115)
-  ;; (set-face-attribute 'default nil :family "Commit Mono" :height 115)
-  ;; (set-face-attribute 'default nil :family "Fira Code" :height 110 :weight 'normal)
-  (set-face-attribute 'default nil :family "Monaspace Neon" :height 110 :weight 'medium)
-  ;; (set-face-attribute 'default nil :family "JetBrains Mono" :height 108 :weight 'normal)
-  ;; (set-face-attribute 'default nil :family "Julia Mono" :height 105 :weight 'medium)
-  ;; (set-frame-font "Fira Code" nil t)
-  (setq-default line-spacing 0.15)
-#+end_src
-
 * Ergonomics: avoiding repetitive strain injuries
 As I personally have had problems with RSI, significant use of the =C-= or =M-= keybinds
 makes my hand hurt after some time (known as "Emacs pinky"). For me, this is especially
@@ -255,14 +254,30 @@ there that is super easy on the eyes and has pastel colors!
 #+end_src
 
 #+begin_src emacs-lisp :tangle yes
+  (defvar face-height-whitelist nil
+    "List of faces for which the :height attribute should be
+    preserved by the function `remove-face-heights'")
+
+  ;; source: http://emacs.stackexchange.com/a/23949/93
+  (defun remove-face-heights ()
+    "Unset the :height attribute for every face except for
+  `default' and any faces listed in `face-height-whitelist'"
+    (mapc
+     (lambda (face)
+       (unless (or (eq face 'default)
+                   (memq face face-height-whitelist))
+         (set-face-attribute face nil :height 'unspecified)))
+     (face-list)))
+
+  (add-hook 'after-init-hook 'remove-face-heights)
+#+end_src
+
+#+begin_src emacs-lisp :tangle yes
   (use-package catppuccin-theme
     :config
     (setq catppuccin-flavor 'frappe)
     (load-theme 'catppuccin :no-confirm))
 #+end_src
-
-#+RESULTS:
-: t
 
 *** The startup screen
 #+begin_src emacs-lisp :tangle yes
@@ -282,17 +297,35 @@ there that is super easy on the eyes and has pastel colors!
                             (projects . 5)))
     ;; Customize what widgets to show
     (setq dashboard-startupify-list '(dashboard-insert-banner
-                                dashboard-insert-newline
-                                dashboard-insert-banner-title
-                                dashboard-insert-newline
-                                dashboard-insert-navigator
-                                dashboard-insert-newline
-                                dashboard-insert-init-info
-                                dashboard-insert-items
-                                dashboard-insert-newline))
+                                      dashboard-insert-newline
+                                      dashboard-insert-banner-title
+                                      dashboard-insert-newline
+                                      dashboard-insert-navigator
+                                      dashboard-insert-newline
+                                      dashboard-insert-init-info
+                                      dashboard-insert-items
+                                      dashboard-insert-newline))
+    ;; Truncate file/directory path length
+    (setq dashboard-path-style 'truncate-middle)
+    (setq dashboard-path-max-length 55)
     ;; Go to buffer -- i.e. when connecting as client
     (when (daemonp)
       (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))))
+#+end_src
+
+#+begin_src emacs-lisp :tangle no
+  (defun my/dashboard-truncate-path (path)
+    "Truncate PATH to only show the last two directories and the filename."
+    (let ((components (split-string (abbreviate-file-name path) "/")))
+      (concat "..."
+              (mapconcat 'identity (last components 3) "/"))))
+
+  (defun my/dashboard-shorten-paths ()
+    "Shorten the recentf paths in dashboard."
+    (setq dashboard-recentf-items
+          (mapcar #'my/dashboard-truncate-path dashboard-recentf-items)))
+
+  (add-hook 'dashboard-mode-hook 'my/dashboard-shorten-paths)
 #+end_src
 
 *** The mode line
