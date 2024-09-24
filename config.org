@@ -1,4 +1,4 @@
-#+TITLE:    config
+x#+TITLE:    config
 #+SUBTITLE: Emacs configuration 
 #+AUTHOR:   Johannes Nauta
 #+STARTUP:  indent
@@ -273,10 +273,22 @@ there that is super easy on the eyes and has pastel colors!
 #+end_src
 
 #+begin_src emacs-lisp :tangle yes
-  (use-package catppuccin-theme
-    :config
-    (setq catppuccin-flavor 'frappe)
-    (load-theme 'catppuccin :no-confirm))
+   (use-package catppuccin-theme
+     :config
+     (setq catppuccin-flavor 'frappe)
+     (load-theme 'catppuccin :no-confirm))
+     ;;(catppucin-set-color 'font-latex-sectioning-5-face "tomato")
+     ;;(catppuccin-reload))
+#+end_src
+
+**** Change some setting of catppuccin
+#+begin_src emacs-lisp :tangle no
+  (custom-set-faces
+   ;; custom-set-faces was added by Custom.
+   ;; If you edit it by hand, you could mess it up, so be careful.
+   ;; Your init file should contain only one such instance.
+   ;; If there is more than one, they won't work right.
+   '(font-latex-sectioning-5-face ((t (:inherit variable-pitch :foreground "tomato" :weight bold)))))
 #+end_src
 
 *** The startup screen
@@ -360,6 +372,23 @@ shows you how far down the file you currently are. Neat!
     (setq-default poke-line-pokemon "gengar")
     (setq-default poke-line-bar-length 10))
 #+end_src
+
+*** Minibuffers
+I am not fully sure if this is the correct terminal, but there are sometimes some 'issues'
+with the size of a minibuffer, such as the one that appears when a file is saved. When
+file paths are long, the minibuffer size grows and afterwards shrinks. This is often a bit
+'glitchy', for lack of better words. So, to this end, we tweak the =save-buffer= here
+#+begin_src emacs-lisp :tangle yes
+  ;; Yoinked gracefully from: https://stackoverflow.com/a/9749279/7644230
+  (defadvice save-buffer (around my-save-mini-window-size)
+    "Don't increase the size of the echo area if the path of the file being saved is too long to show on one line."
+    (let ((message-truncate-lines t))
+      ad-do-it))
+  (ad-activate 'save-buffer)
+#+end_src
+
+#+RESULTS:
+: save-buffer
 
 ** Never leave Emacs: adding a terminal emulator
 When programming I often find myself reaching for a terminal window to, for example, to
