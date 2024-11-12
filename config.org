@@ -272,16 +272,26 @@ there that is super easy on the eyes and has pastel colors!
   (add-hook 'after-init-hook 'remove-face-heights)
 #+end_src
 
+**** Nord theme
+#+begin_src emacs-lisp :tangle no
+  (use-package nord-theme
+    :straight (nord-theme :local-repo "nord-theme")
+    :config
+    (load-theme 'nord t))
+  ;; (use-package nord-theme
+  ;;   :config
+  ;;   (load-theme 'nord t))
+#+end_src
+
+**** Catppuccin theme
 #+begin_src emacs-lisp :tangle yes
    (use-package catppuccin-theme
      :config
      (setq catppuccin-flavor 'frappe)
      (load-theme 'catppuccin :no-confirm))
-     ;;(catppucin-set-color 'font-latex-sectioning-5-face "tomato")
-     ;;(catppuccin-reload))
 #+end_src
 
-**** Change some setting of catppuccin
+***** Change some setting of catppuccin
 #+begin_src emacs-lisp :tangle no
   (custom-set-faces
    ;; custom-set-faces was added by Custom.
@@ -319,11 +329,14 @@ there that is super easy on the eyes and has pastel colors!
                                       dashboard-insert-newline))
     ;; Truncate file/directory path length
     (setq dashboard-path-style 'truncate-middle)
-    (setq dashboard-path-max-length 55)
+    (setq dashboard-path-max-length 72)
     ;; Go to buffer -- i.e. when connecting as client
     (when (daemonp)
       (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))))
 #+end_src
+
+#+RESULTS:
+: t
 
 #+begin_src emacs-lisp :tangle no
   (defun my/dashboard-truncate-path (path)
@@ -349,6 +362,7 @@ modifications is just to include the column number in the modeline.
 #+begin_src emacs-lisp :tangle yes
   (setq column-number-mode t)
 #+end_src
+
 Minor-modes rapidly clutter the modeline, especially if they have long messages. While
 the actual active minor modes are actually not often of interest, especially once they
 are activated and used often in the same workflow. [[https://github.com/tarsius/minions][minions]] can help with that and
@@ -356,7 +370,26 @@ basically collapses all minor modes into a =-= (dash). So while they can still b
 inspected if necessary, they do not always clutter the modeline.
 #+begin_src emacs-lisp :tangle yes
   (use-package minions
-    :config (minions-mode 1))
+    :config
+    (minions-mode 1))
+#+end_src
+
+Modify the modeline a bit, to show only things that I believe are relevant.
+#+begin_src emacs-lisp :tangle no
+  (setq-default mode-line-format
+              '("%e"
+                mode-line-mule-info
+                mode-line-client
+                mode-line-modified
+                mode-line-remote
+                mode-line-frame-identification
+                mode-line-buffer-identification
+                (vc-mode vc-mode)
+                "  "
+                mode-line-position
+                ;; Insert minions here to manage minor modes
+                minions-mode-line-modes
+                mode-line-misc-info))
 #+end_src
 
 **** Adding Pokemon
@@ -370,8 +403,11 @@ shows you how far down the file you currently are. Neat!
     (poke-line-global-mode t)
     :config
     (setq-default poke-line-pokemon "gengar")
-    (setq-default poke-line-bar-length 10))
+    (setq-default poke-line-bar-length 6))
 #+end_src
+
+#+RESULTS:
+: t
 
 *** Minibuffers
 I am not fully sure if this is the correct terminal, but there are sometimes some 'issues'
@@ -412,7 +448,7 @@ Additionally we choose a global key combination to open vterm, in this case =C-`
 #+end_src
 
 *** Change how =vterm= is displayed when opened
-The vterm normally opens in an already opened buffer. This is often unwanted as you want
+The =vterm= normally opens in an already opened buffer. This is often unwanted as you want
 to use the terminal on the side while keeping your current active buffer open. My current
 preference is to open the terminal on the bottom. You can always open it in the current
 window, kill some windows, switch around, etc.
@@ -424,6 +460,17 @@ window, kill some windows, switch around, etc.
                  (side . bottom)
                  (slot . 0)))
 #+end_src
+
+*** =multi-vterm= 
+Often one finds themselves needing multiple instances of =vterm= open, i.e. one in a data
+folder, and the other to run a script. While we can of course use the terminal that is
+available to us, this makes us have to leave Emacs!! Luckily, there is a useful tool that
+allows for multiple =vterm= instances to be open at the same time, =multi-vterm=
+#+begin_src emacs-lisp :tangle yes
+  (use-package multi-vterm)
+#+end_src
+
+#+RESULTS:
 
 ** Navigating within buffers
 Navigating the current buffer can sometimes be a hassle as you have to press the arrow
@@ -641,7 +688,8 @@ writing an formatting TeX files in Emacs.
     (setq TeX-auto-save t
           TeX-parse-self t
           TeX-save-query nil)
-    (setq font-latex-fontify-sectioning 'color)  ;; Disable fontification, e.g. \section
+    ;; (setq font-latex-fontify-sectioning 'color)  ;; Disable fontification, e.g. \section
+    ;; (setq TeX-install-font-lock 'ignore)
     (setq font-latex-fontify-sectioning 1.0)
     (setq reftex-plug-into-AUCTeX t)
     (setq reftex-bibliography-commands '("bibliography" "nobibliography" "addbibresource"))
@@ -656,6 +704,9 @@ writing an formatting TeX files in Emacs.
            (LaTeX-mode . TeX-source-correlate-mode)   ;; Correlated PDF and tex file       
            (TeX-after-compilation-finished-functions . TeX-revert-document-buffer)))
 #+end_src
+
+#+RESULTS:
+| TeX-revert-document-buffer |
 
 #+begin_src emacs-lisp :tangle init.el
   (defun hack-one-local-variable (var val)
@@ -739,6 +790,16 @@ logging =TODO='s.
 #+begin_src emacs-lisp :tangle yes
   (setq org-log-done t)
 #+end_src
+
+Define agenda files to check for TODOs
+#+begin_src emacs-lisp :tangle yes
+  (setq org-agenda-files '("~/work/tasks/org/daily"
+                           "~/work/tasks/org/deadlines"
+                           "~/work/tasks/org/open"))
+#+end_src
+
+#+RESULTS:
+| ~/work/tasks/org/daily | ~/work/tasks/org/open | ~/work/tasks/org/deadlines |
 
 Define new [[https://orgmode.org/manual/Workflow-states.html][TODO keywords as workflow states]], and [[https://orgmode.org/manual/Fast-access-to-TODO-states.html][assign keys for single-letter access.]]
 #+begin_src emacs-lisp :tangle yes
@@ -912,18 +973,19 @@ with snippets (when configured).
 #+begin_src emacs-lisp :tangle yes
   (use-package company
     :config
-    (setq company-idle-delay 0.0)
+    (setq company-idle-delay 0.1)
     (setq company-minimum-prefix-length 2)
-    (setq company-backends '((company-yasnippet
-                              company-capf
+    (setq company-backends '((company-capf
+                              :with company-yasnippet
                               company-dabbrev-code
                               company-dabbrev
                               company-files)))
-    :hook ((eglot-managed-mode . company-mode)))
+    :hook ((eglot-managed-mode . company-mode)
+           (eglot-managed-mode . yas-minor-mode)))
 #+end_src
 
 #+RESULTS:
-| company-mode |
+| yas-minor-mode | company-mode |
 
 While =company= is very useful, the suggestion it shows are sometimes very odd. I myself
 notice it a lot when working in =julia=. As any Unicode character is allowed, when wanting
@@ -969,4 +1031,12 @@ timeout can be adjusted when desired.
     :defer t
     :config
     (setq eglot-connect-timeout 100000))
+#+end_src
+
+
+#+begin_src emacs-lisp :tangle yes
+   (use-package catppuccin-theme
+     :config
+     (setq catppuccin-flavor 'frappe)
+     (load-theme 'catppuccin :no-confirm))
 #+end_src
