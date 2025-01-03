@@ -1,4 +1,4 @@
-x#+TITLE:    config
+#+TITLE:    config
 #+SUBTITLE: Emacs configuration 
 #+AUTHOR:   Johannes Nauta
 #+STARTUP:  indent
@@ -962,8 +962,12 @@ not-so-easy-to-solve issues with =julia=, I have chosen =eglot=.
     (setq eglot-ignored-server-capabilites '(:inlayHintProvider))
     (put 'eglot-note 'flymake-overlay-control nil)
     (put 'eglot-warning 'flymake-overlay-control nil)
-    (put 'eglot-error 'flymake-overlay-control nil))
+    (put 'eglot-error 'flymake-overlay-control nil)
+    (add-to-list 'eglot-stay-out-of 'company-backends))
 #+end_src
+
+#+RESULTS:
+: t
 
 ** Autocompletion
 [[https://company-mode.github.io/][Company]] (COMPletion ANYwhere) is a text completion framework for Emacs. It pops up a small
@@ -973,7 +977,7 @@ with snippets (when configured).
 #+begin_src emacs-lisp :tangle yes
   (use-package company
     :config
-    (setq company-idle-delay 0.1)
+    (setq company-idle-delay 0.02)
     (setq company-minimum-prefix-length 2)
     (setq company-backends '((company-capf
                               :with company-yasnippet
