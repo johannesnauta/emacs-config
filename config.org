@@ -412,6 +412,7 @@ shows you how far down the file you currently are. Neat!
     ;; This package is not yet the version in MELPA, so you will need to explicitly specify it.
     :straight '(parrot :type git :host github :repo "positron-solutions/parrot")
     :custom
+    (parrot-animate 'hide-static)
     (parrot-party-on-magit-push t)
     :config
     (parrot-set-parrot-type 'default)
