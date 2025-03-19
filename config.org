@@ -419,6 +419,9 @@ shows you how far down the file you currently are. Neat!
     (parrot-mode t)) ; enable the global minor mode!
 #+end_src
 
+#+RESULTS:
+: t
+
 *** Minibuffers
 I am not fully sure if this is the correct terminal, but there are sometimes some 'issues'
 with the size of a minibuffer, such as the one that appears when a file is saved. When
