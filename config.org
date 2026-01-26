@@ -318,26 +318,23 @@ there that is super easy on the eyes and has pastel colors!
                             (agenda . 10)
                             (bookmarks . 5)
                             (projects . 5)))
-    ;; Customize what widgets to show
-    (setq dashboard-startupify-list '(dashboard-insert-banner
-                                      dashboard-insert-newline
-                                      dashboard-insert-banner-title
-                                      dashboard-insert-newline
-                                      dashboard-insert-navigator
-                                      dashboard-insert-newline
-                                      dashboard-insert-init-info
-                                      dashboard-insert-items
-                                      dashboard-insert-newline))
-    ;; Truncate file/directory path length
-    (setq dashboard-path-style 'truncate-middle)
-    (setq dashboard-path-max-length 72)
-    ;; Go to buffer -- i.e. when connecting as client
-    (when (daemonp)
-      (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))))
+  ;; Customize what widgets to show
+  (setq dashboard-startupify-list '(dashboard-insert-banner
+                                    dashboard-insert-newline
+                                    dashboard-insert-banner-title
+                                    dashboard-insert-newline
+                                    dashboard-insert-navigator
+                                    dashboard-insert-newline
+                                    dashboard-insert-init-info
+                                    dashboard-insert-items
+                                    dashboard-insert-newline))
+  ;; Truncate file/directory path length
+  (setq dashboard-path-style 'truncate-middle)
+  (setq dashboard-path-max-length 72)
+  ;; Go to buffer -- i.e. when connecting as client
+  (when (daemonp)
+    (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))))
 #+end_src
-
-#+RESULTS:
-: t
 
 #+begin_src emacs-lisp :tangle no
   (defun my/dashboard-truncate-path (path)
@@ -590,6 +587,7 @@ a project, find references in the project, and more. It integrates with the buil
                 ("C-c p" . projectile-command-map)))
 #+end_src
 
+
 * The golden nugget: =git= magic with Magit
 [[https://magit.vc/][Magit]] is a complete text- and keyboard-based user interface to Git. In the background,
 Magit just runs your standard Git commands. However, it provides you with extensive
@@ -711,15 +709,14 @@ writing an formatting TeX files in Emacs.
     ;; (setq TeX-view-program-selection '((output-pdf "Evince")))
     ;; Add Zathura as default (see below)
     (add-to-list 'TeX-view-program-selection '(output-pdf "Zathura"))
+    (setq TeX-view-program-list
+      '(("Zathura" "zathura --synctex-forward %n:%b:%o --reuse-window &")))
     (setq TeX-view-program-selection '((output-pdf "Zathura")))
     :hook ((LaTeX-mode . turn-on-reftex)              ;; Turn on RefTeX
            (LaTeX-mode . eglot-ensure)                ;; Turn on eglot (LSP)
            (LaTeX-mode . TeX-source-correlate-mode)   ;; Correlated PDF and tex file       
            (TeX-after-compilation-finished-functions . TeX-revert-document-buffer)))
 #+end_src
-
-#+RESULTS:
-| TeX-revert-document-buffer |
 
 #+begin_src emacs-lisp :tangle init.el
   (defun hack-one-local-variable (var val)
@@ -889,7 +886,7 @@ have to resort to manually downloading the relevant =elisp= files.
     ;; Set the terminal backend
     (julia-repl-set-terminal-backend 'vterm)
     ;; Set the number of threads
-    (setenv "JULIA_NUM_THREADS" "8")
+    (setenv "JULIA_NUM_THREADS" "4")
     ;; Keybindings for quickly sending code to the REPL
     (define-key julia-repl-mode-map (kbd "<M-RET>") 'my/julia-repl-send-cell))
 #+end_src
@@ -924,15 +921,26 @@ This mode is the bread-and-butter of using Python in Emacs. It's old, it's reali
 at least, seems to be), and the documentation is bad. But, it gives a lot of useful
 functionality out-of-the-box, such as sending lines to the REPL, etc. Here, we just
 trigger it to ensure it is activated, as is =eglot=.
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp :tangle no
   (use-package python-mode
     :defer t
-    :mode "\\.py\\'"
+    :mode "\\.py\\"
     :interpreter "python"
-    :init
-    (add-to-list 'auto-mode-alist '("\\.python\\'" . python-mode))
     ;; Specify the hook that connects =eglot=
-    :hook (julia-mode . eglot-ensure))
+    :hook (python-mode . eglot-ensure))
+#+end_src
+
+*** =python-ts-mode=
+It lives in the built-in =python.el= package, so normally this one does not need to be
+installed at all. We can specifically tell =use-package= to not install it. Finally, we
+also trigger =eglot= whenever a =.py= file is opened.
+#+begin_src emacs-lisp :tangle yes
+  (use-package python
+    :defer t
+    ;; Built-in, so do not install
+    :ensure nil
+    :mode "\\.py\\'"
+    :hook (python-ts-mode . eglot-ensure))
 #+end_src
 
 *** Poetry
@@ -950,6 +958,49 @@ solution to finding the correct executable, to make everything else "just work".
     :config
     (add-hook 'python-base-mode-hook 'pet-mode -10))
 #+end_src
+
+*** multi-vterm and Python
+What a mess
+#+begin_src emacs-lisp :tangle yes
+  (defvar multi-vterm-get-python-vterm "*python-vterm*"
+    "Name of the multi-vterm buffer used for Python REPL.")
+
+  (defun multi-vterm-create-python-vterm ()
+    (interactive)
+    "Return the multi-vterm buffer used for Python.
+         If it doesn't exist, create it and rename to `my-python-vterm-name`."
+    (or (get-buffer multi-vterm-get-python-vterm)
+        (let ((currentbuffer (multi-vterm))) ; create a new multi-vterm
+          (with-current-buffer currentbuffer
+            (rename-buffer multi-vterm-get-python-vterm))
+          currentbuffer)))
+
+  (defun multi-vterm-send-region-to-python (start end)
+    "Send the current region to the Python vterm buffer."
+    (interactive "r")
+    (let* ((buf (multi-vterm-create-python-vterm))
+           (code (buffer-substring-no-properties start end)))
+      (with-current-buffer buf
+        (goto-char (point-max))
+        (vterm-send-string code)
+        (vterm-send-return))))
+
+  (defun multi-vterm-send-line-to-python ()
+    "Send the current line to the Python vterm buffer."
+    (interactive)
+    (multi-vterm-send-region-to-python (line-beginning-position) (line-end-position)))
+
+  (defun multi-vterm-python-set-keys ()
+    (interactive)
+    "Set up keybindings for sending code to Python vterm."
+    (local-set-key (kbd "C-c C-l") 'multi-vterm-send-line-to-python)
+    (local-set-key (kbd "C-c C-r") 'multi-vterm-send-region-to-python))
+
+  (add-hook 'python-mode-hook 'multi-vterm-python-set-keys)
+#+end_src
+
+#+RESULTS:
+| multi-vterm-python-set-keys |
 
 ** Lua configuration
 Although I do not use Lua, [[https://wezfurlong.org/wezterm/][wezterm]] (my current terminal emulator) is configured
