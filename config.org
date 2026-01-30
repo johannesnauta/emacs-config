@@ -103,19 +103,26 @@ Standard Emacs read cache default size is (only) 4k, so change it here, say to 1
 ** Fonts
 A sensible font is important, so set it here. Note that the font needs to be installed
 seperately in the distro of choice. After installing, simply select the desired font. I
-change the height a bit as I find the default height to be slighly too large. 
-#+begin_src emacs-lisp :tangle yes
+change the height a bit as I find the default height to be slighly too large. I also
+include a fall back font [for Greek symbols] as these do not seem to be included in my
+desired font.
+#+begin_src emacs-lisp :tangle yes  
+  (set-face-attribute 'default nil :family "Monaspace Neon" :height 110 :weight 'medium)
+  ;; Monaspace Neon does not support Greek symbols, it seems, so use Fira Code for that
+  (set-fontset-font "fontset-default" 'greek "Fira Code")
+  (setq-default line-spacing 0.15)
   ;; Font and font size
   ;; (set-face-attribute 'default nil :family "Roboto Mono Medium" :height 115)
   ;; (set-face-attribute 'default nil :family "Iosevka" :height 115)
   ;; (set-face-attribute 'default nil :family "Commit Mono" :height 115)
-  ;; (set-face-attribute 'default nil :family "Fira Code" :height 110 :weight 'normal)
-  (set-face-attribute 'default nil :family "Monaspace Neon" :height 110 :weight 'medium)
-  (setq-default line-spacing 0.15)
+  ;; (set-face-attribute 'default nil :family "Fira Code" :height 110 :weight 'medium)
+  ;; (set-face-attribute 'default nil :family "JuliaMono" :height 105 :weight 'bold)
   ;; (set-face-attribute 'default nil :family "JetBrains Mono" :height 108 :weight 'normal)
   ;; (set-face-attribute 'default nil :family "Julia Mono" :height 105 :weight 'medium)
   ;; (set-frame-font "Fira Code" nil t)
 #+end_src
+
+#+RESULTS:
 
 ** Sensible miscellaneous defaults
 Finally, there are some defaults that are sensible to set, such as the TAB width, among
@@ -315,7 +322,7 @@ there that is super easy on the eyes and has pastel colors!
     (setq dashboard-vertically-center-content t)
     ;; Customize widgets
     (setq dashboard-items '((recents . 7)
-                            (agenda . 10)
+                            ;; (agenda . 10)
                             (bookmarks . 5)
                             (projects . 5)))
   ;; Customize what widgets to show
@@ -433,9 +440,6 @@ file paths are long, the minibuffer size grows and afterwards shrinks. This is o
   (ad-activate 'save-buffer)
 #+end_src
 
-#+RESULTS:
-: save-buffer
-
 ** Never leave Emacs: adding a terminal emulator
 When programming I often find myself reaching for a terminal window to, for example, to
 browse through my current working directory (although I should probably do this using
@@ -479,8 +483,6 @@ allows for multiple =vterm= instances to be open at the same time, =multi-vterm=
 #+begin_src emacs-lisp :tangle yes
   (use-package multi-vterm)
 #+end_src
-
-#+RESULTS:
 
 ** Navigating within buffers
 Navigating the current buffer can sometimes be a hassle as you have to press the arrow
@@ -657,6 +659,98 @@ merge conflicts.
                                      (when smerge-mode
                                        (smerge-hydra/body)))))
 #+end_src
+
+* LSP and related functionality: gotta code fast
+Emacs has two major LSP providers, =lsp-mode= and =eglot=. As =eglot= will be in Emacs'
+core (from v29 onwards), and as I have found =lsp-mode= to come with some
+not-so-easy-to-solve issues with =julia=, I have chosen =eglot=.
+
+** Eglot
+#+begin_src emacs-lisp :tangle yes
+  (use-package eglot
+    :config
+    (setq eglot-autoshutdown t)
+    (setq eldoc-echo-area-use-multiline-p nil)
+    (setq eglot-ignored-server-capabilites '(:inlayHintProvider))
+    (put 'eglot-note 'flymake-overlay-control nil)
+    (put 'eglot-warning 'flymake-overlay-control nil)
+    (put 'eglot-error 'flymake-overlay-control nil)
+    (add-to-list 'eglot-stay-out-of 'company-backends))
+#+end_src
+
+#+RESULTS:
+
+** Autocompletion
+[[https://company-mode.github.io/][Company]] (COMPletion ANYwhere) is a text completion framework for Emacs. It pops up a small
+UI that shows you candidates for the symbols you have currently typed, making development
+much faster and avoid spelling mistakes, e.g. in function names. It works with =eglot= or
+with snippets (when configured).
+#+begin_src emacs-lisp :tangle yes
+  (use-package company
+    :config
+    (setq company-idle-delay 0.02)
+    (setq company-minimum-prefix-length 2)
+    (setq company-inhibit-inside-symbols t)
+    (setq company-backends '((company-capf
+                              :with company-yasnippet
+                              company-dabbrev-code
+                              company-dabbrev
+                              company-files)))
+    :hook ((eglot-managed-mode . company-mode)
+           (eglot-managed-mode . yas-minor-mode)))
+#+end_src
+
+While =company= is very useful, the suggestion it shows are sometimes very odd. I myself
+notice it a lot when working in =julia=. As any Unicode character is allowed, when wanting
+to type Greek symbols it often matches a whole bunch of Unicode characters. And even when
+there is a complete match, it is often hidden behind many undesirable characters. 
+While there might be an option out there that filters, or that increases complete matches
+to be more likely to appear close to the top of the suggestion, there might be a better
+and (conceptually) more easy way: =company-statistics=.
+The idea is simple: just remember a certain number of completions, and use their frequency
+to rank suggestion candidates. 
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package company-statistics
+    :defer t
+    :config
+    (let ((cache-dir (concat user-emacs-directory "caches/")))
+      ;; Create the directory if it doesn't exist
+      (unless (file-exists-p cache-dir)
+      (make-directory cache-dir t))
+      ;; Set the statistics file
+      (setq company-statistics-file (concat cache-dir "company-statistics-cache.el")))
+    :hook ((company-mode . company-statistics-mode)))
+#+end_src
+
+** Specify languages
+For =eglot= to function, you need to install the language server for the specific language
+that you are interested in. Below, the language servers that I use will be installed.
+
+*Supported languages*
+1. =julia=
+2. ...
+
+*** Julia
+The timeout can be configured. It will most likely need to be large the first time
+=eglot-jl= is invoked, as the language server will need to be installed. Afterwards the
+timeout can be adjusted when desired.
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package eglot-jl
+    :defer t
+    :straight (eglot-jl
+               :type git
+               :host github
+               :repo "johannesnauta/eglot-jl"
+               :branch "pkg")
+    :config
+    (setq eglot-connect-timeout 100000))
+  ;; :repo "non-Jedi/eglot-jl"
+#+end_src
+
+#+RESULTS:
+
 
 * Snippets: gotta go fast
 No editor is complete without inserting large, pre-formatted textblocks into your files
@@ -854,7 +948,7 @@ Nowdays I write essentially all my code in [[https://julialang.org/][Julia]] as 
 computing. While in general the support for Julia is not as widespread as Python's, there
 is significant movement leading to a bunch of tools (for Emacs). The most important one is
 [[https://github.com/JuliaEditorSupport/julia-emacs][=julia-mode=]].
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp :tangle yes
   (use-package julia-mode
     :mode "\\.jl\\'"
     :interpreter "julia"
@@ -864,14 +958,14 @@ is significant movement leading to a bunch of tools (for Emacs). The most import
     :hook (julia-mode . eglot-ensure))
 #+end_src
 
-#+begin_src emacs-lisp :tangle yes
-  (use-package julia-ts-mode
-    :ensure t
-    :mode "\\.jl$"
-    :interpreter "julia"
-    :config
-    (eglot-jl-init)
-    :hook (julia-ts-mode . eglot-ensure))
+#+begin_src emacs-lisp :tangle no
+  ;; (use-package julia-ts-mode
+  ;;   :ensure t
+  ;;   :mode "\\.jl$"
+  ;;   :interpreter "julia"
+  ;;   :hook (julia-ts-mode . eglot-ensure)
+  ;;   :config
+  ;;   (eglot-jl-init))
 #+end_src
 
 The Julia REPL is quite a useful tool when writing and debugging, so we want to
@@ -1019,6 +1113,7 @@ basic syntax highlighting.
 [work in progress]
 #+begin_src emacs-lisp :tangle yes
   (use-package treesit-auto
+    :ensure t
     :custom
     (treesit-auto-install 'prompt)
     :config
@@ -1026,110 +1121,36 @@ basic syntax highlighting.
     (global-treesit-auto-mode))
 #+end_src
 
+#+RESULTS:
+: t
+
+*** Remnants
+these can be set as sometimes the treesit-language grammars are not found [?]
+#+begin_src emacs-lisp :tangle no
+  (add-to-list 'treesit-language-source-alist
+               '(julia "https://github.com/tree-sitter/tree-sitter-julia" "v0.23.1"))
+  (treesit-install-language-grammar 'julia)
+  (add-to-list 'major-mode-remap-alist '(julia-mode . julia-ts-mode))
+
+  ;; (setq treesit-language-source-alist
+  ;;       '((bash "https://github.com/tree-sitter/tree-sitter-bash")
+  ;;         (elisp "https://github.com/Wilfred/tree-sitter-elisp")
+  ;;         (julia "https://github.com/tree-sitter/tree-sitter-julia")))
+#+end_src
+
+** Recipes
+https://github.com/tree-sitter/tree-sitter-julia.git
+
+*** Julia
+We create a recipe and specify that we should always switch to =julia-ts-mode= if possible.
 #+begin_src emacs-lisp :tangle no
   (setq julia-treesit-auto-config
         (make-treesit-auto-recipe
          :lang 'julia
          :ts-mode 'julia-ts-mode
          :remap '(julia-mode)
-         :url ""
-         :revision "master/5df0420f792086ae8c3536bbe012bca51e3c7133"
+         :url "https://github.com/tree-sitter/tree-sitter-julia"
+         :revision "v0.23.1"
          :ext "\\.jl\\'"))
   (add-to-list 'treesit-auto-recipe-list julia-treesit-auto-config)
-#+end_src
-
-#+begin_src emacs-lisp :tangle no
-  (setq treesit-language-source-alist
-        '((bash "https://github.com/tree-sitter/tree-sitter-bash")
-          (elisp "https://github.com/Wilfred/tree-sitter-elisp")
-          (julia "https://github.com/tree-sitter/tree-sitter-julia")))
-#+end_src
-
-* LSP: gotta code fast
-Emacs has two major LSP providers, =lsp-mode= and =eglot=. As =eglot= will be in Emacs'
-core (from v29 onwards), and as I have found =lsp-mode= to come with some
-not-so-easy-to-solve issues with =julia=, I have chosen =eglot=.
-
-** Eglot
-#+begin_src emacs-lisp :tangle yes
-  (use-package eglot
-    :config
-    (setq eglot-autoshutdown t)
-    (setq eldoc-echo-area-use-multiline-p nil)
-    (setq eglot-ignored-server-capabilites '(:inlayHintProvider))
-    (put 'eglot-note 'flymake-overlay-control nil)
-    (put 'eglot-warning 'flymake-overlay-control nil)
-    (put 'eglot-error 'flymake-overlay-control nil)
-    (add-to-list 'eglot-stay-out-of 'company-backends))
-#+end_src
-
-#+RESULTS:
-
-** Autocompletion
-[[https://company-mode.github.io/][Company]] (COMPletion ANYwhere) is a text completion framework for Emacs. It pops up a small
-UI that shows you candidates for the symbols you have currently typed, making development
-much faster and avoid spelling mistakes, e.g. in function names. It works with =eglot= or
-with snippets (when configured).
-#+begin_src emacs-lisp :tangle yes
-  (use-package company
-    :config
-    (setq company-idle-delay 0.02)
-    (setq company-minimum-prefix-length 2)
-    (setq company-inhibit-inside-symbols t)
-    (setq company-backends '((company-capf
-                              :with company-yasnippet
-                              company-dabbrev-code
-                              company-dabbrev
-                              company-files)))
-    :hook ((eglot-managed-mode . company-mode)
-           (eglot-managed-mode . yas-minor-mode)))
-#+end_src
-
-#+RESULTS:
-| yas-minor-mode | company-mode |
-
-While =company= is very useful, the suggestion it shows are sometimes very odd. I myself
-notice it a lot when working in =julia=. As any Unicode character is allowed, when wanting
-to type Greek symbols it often matches a whole bunch of Unicode characters. And even when
-there is a complete match, it is often hidden behind many undesirable characters. 
-While there might be an option out there that filters, or that increases complete matches
-to be more likely to appear close to the top of the suggestion, there might be a better
-and (conceptually) more easy way: =company-statistics=.
-The idea is simple: just remember a certain number of completions, and use their frequency
-to rank suggestion candidates. 
-
-#+begin_src emacs-lisp :tangle yes
-  (use-package company-statistics
-    :defer t
-    :config
-    (let ((cache-dir (concat user-emacs-directory "caches/")))
-      ;; Create the directory if it doesn't exist
-      (unless (file-exists-p cache-dir)
-      (make-directory cache-dir t))
-      ;; Set the statistics file
-      (setq company-statistics-file (concat cache-dir "company-statistics-cache.el")))
-    :hook ((company-mode . company-statistics-mode)))
-#+end_src
-
-#+RESULTS:
-| company-statistics-mode | company-mode-set-explicitly |
-
-** Specify languages
-For =eglot= to function, you need to install the language server for the specific language
-that you are interested in. Below, the language servers that I use will be installed.
-
-*Supported languages*
-1. =julia=
-2. ...
-
-*** Julia
-The timeout can be configured. It will most likely need to be large the first time
-=eglot-jl= is invoked, as the language server will need to be installed. Afterwards the
-timeout can be adjusted when desired.
-
-#+begin_src emacs-lisp :tangle yes
-  (use-package eglot-jl
-    :defer t
-    :config
-    (setq eglot-connect-timeout 1000))
 #+end_src
