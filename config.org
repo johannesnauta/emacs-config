@@ -315,7 +315,6 @@ there that is super easy on the eyes and has pastel colors!
     (setq dashboard-vertically-center-content t)
     ;; Customize widgets
     (setq dashboard-items '((recents . 7)
-                            (agenda . 10)
                             (bookmarks . 5)
                             (projects . 5)))
   ;; Customize what widgets to show
