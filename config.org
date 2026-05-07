@@ -160,6 +160,18 @@ In contrast, some behavior is not turned on by default, so we do that here
   (setq recentf-max-saved-items 50)
 #+end_src
 
+#+begin_src emacs-lisp :tangle yes
+  ;; Set C-M-= and C-M-- to scale *all* frames
+  ;; In essence, it's an Emacs-wide version of =text-scale-mode=
+  (use-package default-text-scale
+    :config (default-text-scale-mode)
+    :bind (("C-=" . default-text-scale-increase)
+           ("C--" . default-text-scale-decrease)))
+#+end_src
+
+#+RESULTS:
+: default-text-scale-decrease
+
 ** Enabling 'fuzzy' search
 !!! TODO
 	Replace this by =avy=?
@@ -943,7 +955,7 @@ also trigger =eglot= whenever a =.py= file is opened.
 #+end_src
 
 *** Poetry
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp :tangle no
   (use-package poetry
     :ensure t)
 #+end_src
@@ -960,7 +972,7 @@ solution to finding the correct executable, to make everything else "just work".
 
 *** multi-vterm and Python
 What a mess
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp :tangle no
   (defvar multi-vterm-get-python-vterm "*python-vterm*"
     "Name of the multi-vterm buffer used for Python REPL.")
 
@@ -1119,7 +1131,7 @@ that you are interested in. Below, the language servers that I use will be insta
 
 *Supported languages*
 1. =julia=
-2. ...
+2. =python=
 
 *** Julia
 The timeout can be configured. It will most likely need to be large the first time
@@ -1131,4 +1143,23 @@ timeout can be adjusted when desired.
     :defer t
     :config
     (setq eglot-connect-timeout 1000))
+#+end_src
+
+*** Python
+Install LSP for Python, here, =lsp-pyright= is used in conjunction with Ruff for
+formatting.
+#+begin_src emacs-lisp :tangle yes
+  (add-to-list 'eglot-server-programs
+               '((python-mode python-ts-mode)
+                 "basedpyright-langserver" "--stdio"))
+#+end_src
+
+#+begin_src emacs-lisp :tangle no
+  (with-eval-after-load 'eglot
+    (add-to-list 'eglot-server-programs
+                 '(python-base-mode . ("ruff" "server"))))
+  (add-hook 'python-base-mode-hook
+            (lambda ()
+              (eglot-ensure)
+              (add-hook 'after-save-hook 'eglot-format nil t)))
 #+end_src
