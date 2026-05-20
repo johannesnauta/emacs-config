@@ -129,6 +129,12 @@ originating from a package that is handled by =use-package=. These should be han
   (setq indent-line-function 'insert-tab)  ;; Indent lines according to current major mode
 #+end_src
 
+#+begin_src emacs-lisp :tangle yes
+  (setq auto-revert-use-notify nil)
+  (setq auto-revert-interval 1)
+  (global-auto-revert-mode 1)
+#+end_src
+
 ** Suppressing default behaviors
 There are some default behaviors which are just annoying, such as the startup
 splash screen or the sound on error or EOF. We can suppress some more things
@@ -328,6 +334,7 @@ there that is super easy on the eyes and has pastel colors!
     ;; Customize widgets
     (setq dashboard-items '((recents . 7)
                             (bookmarks . 5)
+                            (agenda . 5)
                             (projects . 5)))
   ;; Customize what widgets to show
   (setq dashboard-startupify-list '(dashboard-insert-banner
@@ -346,6 +353,9 @@ there that is super easy on the eyes and has pastel colors!
   (when (daemonp)
     (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))))
 #+end_src
+
+#+RESULTS:
+: t
 
 #+begin_src emacs-lisp :tangle no
   (defun my/dashboard-truncate-path (path)
@@ -816,6 +826,7 @@ Define agenda files to check for TODOs
 #+begin_src emacs-lisp :tangle yes
   (setq org-agenda-files '("~/work/tasks/org/daily"
                            "~/work/tasks/org/deadlines"
+                           "~/work/tasks/org/weekly"
                            "~/work/tasks/org/open"))
 #+end_src
 
@@ -901,9 +912,6 @@ have to resort to manually downloading the relevant =elisp= files.
     ;; Keybindings for quickly sending code to the REPL
     (define-key julia-repl-mode-map (kbd "<M-RET>") 'my/julia-repl-send-cell))
 #+end_src
-
-#+RESULTS:
-| julia-repl-mode |
 
 #+begin_src emacs-lisp :tangle no
   (defun my/julia-repl-send-cell() 
@@ -1012,6 +1020,31 @@ What a mess
 
 #+RESULTS:
 | multi-vterm-python-set-keys |
+
+** Markdown
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package markdown-mode
+    :ensure t
+    :mode ("README\\.md\\'" . gfm-mode)
+    :init (setq markdown-command "multimarkdown")
+    :bind (:map markdown-mode-map
+                ("C-c C-e" . markdown-do)))
+#+end_src
+
+#+RESULTS:
+
+=markdown-ts-mode=
+The treesitter mode for Markdown. It will go core in Emacs31, but seeing that =brew
+install --cask emacs= still defaults to Emacs30 put this here.
+#+begin_src emacs-lisp :tangle yes
+  (use-package markdown-ts-mode
+    :mode ("\\.md\\'" . markdown-ts-mode)
+    :defer 't
+    :config
+    (add-to-list 'treesit-language-source-alist '(markdown "https://github.com/tree-sitter-grammars/tree-sitter-markdown" "split_parser" "tree-sitter-markdown/src"))
+    (add-to-list 'treesit-language-source-alist '(markdown-inline "https://github.com/tree-sitter-grammars/tree-sitter-markdown" "split_parser" "tree-sitter-markdown-inline/src")))
+#+end_src
 
 ** Lua configuration
 Although I do not use Lua, [[https://wezfurlong.org/wezterm/][wezterm]] (my current terminal emulator) is configured
