@@ -175,9 +175,6 @@ In contrast, some behavior is not turned on by default, so we do that here
            ("C--" . default-text-scale-decrease)))
 #+end_src
 
-#+RESULTS:
-: default-text-scale-decrease
-
 ** Enabling 'fuzzy' search
 !!! TODO
 	Replace this by =avy=?
@@ -354,9 +351,6 @@ there that is super easy on the eyes and has pastel colors!
     (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))))
 #+end_src
 
-#+RESULTS:
-: t
-
 #+begin_src emacs-lisp :tangle no
   (defun my/dashboard-truncate-path (path)
     "Truncate PATH to only show the last two directories and the filename."
@@ -421,7 +415,7 @@ shows you how far down the file you currently are. Neat!
     :init
     (poke-line-global-mode t)
     :config
-    (setq-default poke-line-pokemon "gengar")
+    (setq-default poke-line-pokemon "gastly")
     (setq-default poke-line-bar-length 6))
 #+end_src
 
@@ -437,9 +431,6 @@ shows you how far down the file you currently are. Neat!
     (parrot-mode t)) ; enable the global minor mode!
 #+end_src
 
-#+RESULTS:
-: t
-
 *** Minibuffers
 I am not fully sure if this is the correct terminal, but there are sometimes some 'issues'
 with the size of a minibuffer, such as the one that appears when a file is saved. When
@@ -453,9 +444,6 @@ file paths are long, the minibuffer size grows and afterwards shrinks. This is o
       ad-do-it))
   (ad-activate 'save-buffer)
 #+end_src
-
-#+RESULTS:
-: save-buffer
 
 ** Never leave Emacs: adding a terminal emulator
 When programming I often find myself reaching for a terminal window to, for example, to
@@ -500,8 +488,6 @@ allows for multiple =vterm= instances to be open at the same time, =multi-vterm=
 #+begin_src emacs-lisp :tangle yes
   (use-package multi-vterm)
 #+end_src
-
-#+RESULTS:
 
 ** Navigating within buffers
 Navigating the current buffer can sometimes be a hassle as you have to press the arrow
@@ -830,9 +816,6 @@ Define agenda files to check for TODOs
                            "~/work/tasks/org/open"))
 #+end_src
 
-#+RESULTS:
-| ~/work/tasks/org/daily | ~/work/tasks/org/open | ~/work/tasks/org/deadlines |
-
 Define new [[https://orgmode.org/manual/Workflow-states.html][TODO keywords as workflow states]], and [[https://orgmode.org/manual/Fast-access-to-TODO-states.html][assign keys for single-letter access.]]
 #+begin_src emacs-lisp :tangle yes
   (setq org-todo-keywords
@@ -1018,9 +1001,6 @@ What a mess
   (add-hook 'python-mode-hook 'multi-vterm-python-set-keys)
 #+end_src
 
-#+RESULTS:
-| multi-vterm-python-set-keys |
-
 ** Markdown
 
 #+begin_src emacs-lisp :tangle yes
@@ -1031,8 +1011,6 @@ What a mess
     :bind (:map markdown-mode-map
                 ("C-c C-e" . markdown-do)))
 #+end_src
-
-#+RESULTS:
 
 =markdown-ts-mode=
 The treesitter mode for Markdown. It will go core in Emacs31, but seeing that =brew
@@ -1045,6 +1023,7 @@ install --cask emacs= still defaults to Emacs30 put this here.
     (add-to-list 'treesit-language-source-alist '(markdown "https://github.com/tree-sitter-grammars/tree-sitter-markdown" "split_parser" "tree-sitter-markdown/src"))
     (add-to-list 'treesit-language-source-alist '(markdown-inline "https://github.com/tree-sitter-grammars/tree-sitter-markdown" "split_parser" "tree-sitter-markdown-inline/src")))
 #+end_src
+
 
 ** Lua configuration
 Although I do not use Lua, [[https://wezfurlong.org/wezterm/][wezterm]] (my current terminal emulator) is configured
@@ -1089,6 +1068,11 @@ basic syntax highlighting.
           (julia "https://github.com/tree-sitter/tree-sitter-julia")))
 #+end_src
 
+#+begin_src emacs-lisp :tangle yes
+  (use-package typst-ts-mode
+    :straight '(:type git :host codeberg :repo "meow_king/typst-ts-mode" :branch "main"))
+#+end_src
+
 * LSP: gotta code fast
 Emacs has two major LSP providers, =lsp-mode= and =eglot=. As =eglot= will be in Emacs'
 core (from v29 onwards), and as I have found =lsp-mode= to come with some
@@ -1106,8 +1090,6 @@ not-so-easy-to-solve issues with =julia=, I have chosen =eglot=.
     (put 'eglot-error 'flymake-overlay-control nil)
     (add-to-list 'eglot-stay-out-of 'company-backends))
 #+end_src
-
-#+RESULTS:
 
 ** Autocompletion
 [[https://company-mode.github.io/][Company]] (COMPletion ANYwhere) is a text completion framework for Emacs. It pops up a small
@@ -1128,9 +1110,6 @@ with snippets (when configured).
     :hook ((eglot-managed-mode . company-mode)
            (eglot-managed-mode . yas-minor-mode)))
 #+end_src
-
-#+RESULTS:
-| yas-minor-mode | company-mode |
 
 While =company= is very useful, the suggestion it shows are sometimes very odd. I myself
 notice it a lot when working in =julia=. As any Unicode character is allowed, when wanting
@@ -1154,9 +1133,6 @@ to rank suggestion candidates.
       (setq company-statistics-file (concat cache-dir "company-statistics-cache.el")))
     :hook ((company-mode . company-statistics-mode)))
 #+end_src
-
-#+RESULTS:
-| company-statistics-mode | company-mode-set-explicitly |
 
 ** Specify languages
 For =eglot= to function, you need to install the language server for the specific language
@@ -1182,9 +1158,9 @@ timeout can be adjusted when desired.
 Install LSP for Python, here, =lsp-pyright= is used in conjunction with Ruff for
 formatting.
 #+begin_src emacs-lisp :tangle yes
-  (add-to-list 'eglot-server-programs
-               '((python-mode python-ts-mode)
-                 "basedpyright-langserver" "--stdio"))
+  (with-eval-after-load 'eglot
+    (add-to-list 'eglot-server-programs
+                 '((python-mode python-ts-mode) . ("pylsp"))))
 #+end_src
 
 #+begin_src emacs-lisp :tangle no
