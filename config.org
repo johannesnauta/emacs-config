@@ -489,6 +489,12 @@ allows for multiple =vterm= instances to be open at the same time, =multi-vterm=
   (use-package multi-vterm)
 #+end_src
 
+*** =ghostel= 
+#+begin_src emacs-lisp :tangle yes
+  (use-package ghostel
+    :ensure t)
+#+end_src
+
 ** Navigating within buffers
 Navigating the current buffer can sometimes be a hassle as you have to press the arrow
 keys, =,-n= or =,-p= (note the comma, shoutout to =devil=) or, in extreme cases, use the
