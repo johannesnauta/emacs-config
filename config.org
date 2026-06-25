@@ -813,7 +813,8 @@ Define agenda files to check for TODOs
   (setq org-agenda-files '("~/work/tasks/org/daily"
                            "~/work/tasks/org/deadlines"
                            "~/work/tasks/org/weekly"
-                           "~/work/tasks/org/open"))
+                           "~/work/tasks/org/open"
+                           "~/.emacs.d/org/tasks.org"))
 #+end_src
 
 Define new [[https://orgmode.org/manual/Workflow-states.html][TODO keywords as workflow states]], and [[https://orgmode.org/manual/Fast-access-to-TODO-states.html][assign keys for single-letter access.]]
