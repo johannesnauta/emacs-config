@@ -492,7 +492,50 @@ allows for multiple =vterm= instances to be open at the same time, =multi-vterm=
 *** =ghostel= 
 #+begin_src emacs-lisp :tangle yes
   (use-package ghostel
-    :ensure t)
+    :ensure t
+    :bind (("C-x m" . ghostel)
+           ("C-c r" . my/ghostel-send-line)
+           ("C-c R" . my/ghostel-send-line-reset)
+           :map ghostel-semi-char-mode-map
+           ("C-k" . my/ghostel-send-C-k-and-kill)
+           :map project-prefix-map
+           ("m" . ghostel-project)
+           ("M" . ghostel-project-list-buffers))
+    :config
+    (defun my/ghostel-send-C-k-and-kill ()
+      "Send C-k to ghostel and copy killed text to Emacs kill-ring."
+      (interactive)
+      (kill-ring-save (point) (line-end-position))
+      (ghostel-send-key "k" "ctrl"))
+
+    (add-to-list 'project-switch-commands '(ghostel-project "Ghostel") t)
+    (add-to-list 'project-switch-commands '(ghostel-project-list-buffers "Ghostel buffers") t)
+    
+    (defvar my/ghostel-target nil
+      "Last ghostel buffer used as send target.")
+
+    (defun my/ghostel--pick-buffer ()
+      "Prompt for a ghostel buffer and remember it."
+      (setq my/ghostel-target
+            (completing-read "Send to: " (mapcar #'buffer-name (ghostel--all-buffers)))))
+
+    (defun my/ghostel-send-line (&optional reset)
+      "Send current line to the remembered ghostel buffer.
+  With prefix arg or RESET, re-prompt for target."
+      (interactive "P")
+      (when (or reset
+                (null my/ghostel-target)
+                (not (get-buffer my/ghostel-target)))
+        (my/ghostel--pick-buffer))
+      (let ((text (string-trim (thing-at-point 'line t))))
+        (display-buffer my/ghostel-target)
+        (with-current-buffer my/ghostel-target
+          (ghostel-send-string (concat text "\n")))))
+
+    (defun my/ghostel-send-line-reset ()
+      "Re-prompt for target, then send current line."
+      (interactive)
+      (my/ghostel-send-line t)))
 #+end_src
 
 ** Navigating within buffers
