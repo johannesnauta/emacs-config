@@ -493,7 +493,7 @@ allows for multiple =vterm= instances to be open at the same time, =multi-vterm=
 #+begin_src emacs-lisp :tangle yes
   (use-package ghostel
     :ensure t
-    :bind (("C-x m" . ghostel)
+    :bind (("C-x m" . (lambda () (interactive) (ghostel t)))
            ("C-c r" . my/ghostel-send-line)
            ("C-c R" . my/ghostel-send-line-reset)
            :map ghostel-semi-char-mode-map
@@ -537,6 +537,7 @@ allows for multiple =vterm= instances to be open at the same time, =multi-vterm=
       (interactive)
       (my/ghostel-send-line t)))
 #+end_src
+
 
 ** Navigating within buffers
 Navigating the current buffer can sometimes be a hassle as you have to press the arrow
